@@ -143,9 +143,12 @@ Models that should use the **tenant** database must use the `UsesTenantConnectio
 
 | Command | Purpose |
 |--------|--------|
-| `php artisan migrate --database=landlord` | Run landlord migrations. |
-| `php artisan tenants:artisan "migrate --path=database/migrations/tenant --database=tenant"` | Run tenant migrations for all tenants. |
+| `php artisan tenants:artisan "migrate --path=database/migrations/tenant --database=tenant"` | Run tenant migrations for **all** tenants. |
+| `php artisan tenants:artisan "migrate --path=database/migrations/tenant --database=tenant" --tenant=<id>` | Run tenant migrations for **one** tenant (use tenant UUID or ID). |
+| `php artisan tenants:artisan "..." --tenant=id1 --tenant=id2` | Run for **multiple** tenants (repeat `--tenant`). |
 | `php artisan optimize:clear` | Clear config, cache, etc. (safe with `CACHE_STORE=file`). |
+
+Tenant matching uses the `tenant_artisan_search_fields` in `config/multitenancy.php` (default: `id`). So `--tenant=<uuid>` runs the command only for that tenant.
 
 ---
 
