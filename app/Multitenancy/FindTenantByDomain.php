@@ -13,8 +13,8 @@ class FindTenantByDomain extends TenantFinder
     {
         $host = $request->getHost();
 
-        $domain = Domain::query()
-            ->where('domain', $host)
+        $domain = Domain::where('domain', $host)
+            ->with('tenant')
             ->first();
 
         return $domain?->tenant;
