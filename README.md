@@ -146,9 +146,62 @@ Models that should use the **tenant** database must use the `UsesTenantConnectio
 | `php artisan tenants:artisan "migrate --path=database/migrations/tenant --database=tenant"` | Run tenant migrations for **all** tenants. |
 | `php artisan tenants:artisan "migrate --path=database/migrations/tenant --database=tenant" --tenant=<id>` | Run tenant migrations for **one** tenant (use tenant UUID or ID). |
 | `php artisan tenants:artisan "..." --tenant=id1 --tenant=id2` | Run for **multiple** tenants (repeat `--tenant`). |
-| `php artisan optimize:clear` | Clear config, cache, etc. (safe with `CACHE_STORE=file`). |
 
-Tenant matching uses the `tenant_artisan_search_fields` in `config/multitenancy.php` (default: `id`). So `--tenant=<uuid>` runs the command only for that tenant.
+## Internal setup API (for tenant-management)
+
+This application exposes authenticated internal endpoints used by
+`tenant-management` to run setup stages for a single tenant:
+
+- `POST /api/internal/tenant-setup/token`
+- `POST /api/internal/tenant-setup/tenants/{tenant}/database`
+- `POST /api/internal/tenant-setup/tenants/{tenant}/migrations`
+- `POST /api/internal/tenant-setup/tenants/{tenant}/seeders`
+- `POST /api/internal/tenant-setup/tenants/{tenant}/ensure-user`
+
+### Authentication flow
+
+1. `tenant-management` calls `POST /api/internal/tenant-setup/token` with:
+   - `X-Internal-Setup-Issuer`
+   - `X-Internal-Setup-Timestamp` (unix timestamp, seconds)
+   - `X-Internal-Setup-Signature` = `HMAC-SHA256("issuer|timestamp", shared_secret)`
+2. This app validates the issuer/signature/clock-skew and issues a short-lived bearer token.
+3. Each stage endpoint requires `Authorization: Bearer <access_token>`.
+4. Access token is validated from cache and expires automatically based on TTL.
+
+### Environment variables
+
+Set these in this app and the same shared values in `tenant-management`:
+
+- `INTERNAL_SETUP_ISSUER` (default: `tenant-management`)
+- `INTERNAL_SETUP_SHARED_SECRET` (required)
+- `INTERNAL_SETUP_ALLOWED_CLOCK_SKEW_SECONDS` (default: `60`)
+- `INTERNAL_SETUP_ACCESS_TOKEN_TTL_SECONDS` (default: `120`)
+
+### Stage behavior
+
+- `database`: creates tenant database if it does not exist.
+- `migrations`: runs tenant migrations via `tenants:artisan`.
+- `seeders`: runs tenant seeders via `tenants:artisan`.
+- `ensure-user`: runs `ensure-tenant-user` and returns either `seeded` or `skipped`.
+
+All stage endpoints return JSON with:
+
+- `ok` (boolean)
+- `stage` (stage name)
+- `message` (status detail)
+- `result` (only for `ensure-user`)
+
+Token endpoint returns:
+
+- `ok` (boolean)
+- `stage` (`token`)
+- `message` (status detail)
+- `access_token`
+- `token_type` (`Bearer`)
+- `expires_in` (seconds)
+
+Tenant matching uses `tenant_artisan_search_fields` in `config/multitenancy.php`
+(default: `id`). So `--tenant=<uuid>` runs setup only for that tenant.
 
 ---
 
