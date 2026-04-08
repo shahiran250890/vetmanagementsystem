@@ -12,6 +12,7 @@ Route::prefix('internal/tenant-setup')
             Route::post('tenants/{tenant}/database', [TenantSetupController::class, 'createDatabase']);
             Route::post('tenants/{tenant}/migrations', [TenantSetupController::class, 'runMigrations']);
             Route::post('tenants/{tenant}/seeders', [TenantSetupController::class, 'runSeeders']);
+            Route::post('tenants/{tenant}/fake-seeders', [TenantSetupController::class, 'runFakeSeeders']);
             Route::post('tenants/{tenant}/ensure-user', [TenantSetupController::class, 'ensureUser']);
         });
     });

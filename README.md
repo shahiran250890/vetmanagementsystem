@@ -156,6 +156,7 @@ This application exposes authenticated internal endpoints used by
 - `POST /api/internal/tenant-setup/tenants/{tenant}/database`
 - `POST /api/internal/tenant-setup/tenants/{tenant}/migrations`
 - `POST /api/internal/tenant-setup/tenants/{tenant}/seeders`
+- `POST /api/internal/tenant-setup/tenants/{tenant}/fake-seeders`
 - `POST /api/internal/tenant-setup/tenants/{tenant}/ensure-user`
 
 ### Authentication flow
@@ -182,7 +183,9 @@ Set these in this app and the same shared values in `tenant-management`:
 - `database`: creates tenant database if it does not exist.
 - `migrations`: runs tenant migrations via `tenants:artisan`.
 - `seeders`: runs tenant seeders via `tenants:artisan`.
+- `fake-seeders`: runs fake-data seeders via `tenants:artisan` (currently `PatientSeeder`; excludes `UserSeeder`).
 - `ensure-user`: runs `ensure-tenant-user` and returns either `seeded` or `skipped`.
+  - If nested artisan output is empty but the command succeeds, it is treated as `skipped` to avoid false failures when users already exist.
 
 All stage endpoints return JSON with:
 

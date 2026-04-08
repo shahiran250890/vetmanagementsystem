@@ -58,6 +58,18 @@ class InternalTenantSetupService
         }
     }
 
+    public function runFakeSeeders(Tenant $tenant): void
+    {
+        $exitCode = Artisan::call('tenants:artisan', [
+            'artisanCommand' => 'db:seed --class=PatientSeeder --database=tenant',
+            '--tenant' => [$tenant->id],
+        ]);
+
+        if ($exitCode !== 0) {
+            throw new RuntimeException('Tenant fake data seeders failed: '.trim(Artisan::output()));
+        }
+    }
+
     public function ensureTenantUser(Tenant $tenant): string
     {
         $exitCode = Artisan::call('tenants:artisan', [
@@ -67,6 +79,10 @@ class InternalTenantSetupService
 
         $output = trim(Artisan::output());
         $lastLine = str_contains($output, "\n") ? trim(substr($output, strrpos($output, "\n") + 1)) : $output;
+
+        if ($exitCode === 0 && $lastLine === '') {
+            return 'skipped';
+        }
 
         if ($exitCode !== 0 || ! in_array($lastLine, ['seeded', 'skipped'], true)) {
             throw new RuntimeException('Ensure tenant user failed: '.$output);

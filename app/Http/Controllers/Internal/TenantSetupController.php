@@ -94,6 +94,27 @@ class TenantSetupController extends Controller
         }
     }
 
+    public function runFakeSeeders(Tenant $tenant): JsonResponse
+    {
+        try {
+            $this->setupService->runFakeSeeders($tenant);
+
+            return response()->json([
+                'ok' => true,
+                'stage' => 'fake-seeder',
+                'message' => 'Tenant fake data seeders completed successfully.',
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'ok' => false,
+                'stage' => 'fake-seeder',
+                'message' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
     public function ensureUser(Tenant $tenant): JsonResponse
     {
         try {
