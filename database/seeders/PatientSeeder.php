@@ -17,27 +17,20 @@ class PatientSeeder extends Seeder
         PatientHistoryEntry::query()->delete();
         Patient::query()->delete();
 
-        $eligibleUserIds = User::query()
-            ->whereKeyNot(1)
-            ->pluck('id');
-
-        if ($eligibleUserIds->isEmpty()) {
-            User::factory()->count(3)->create();
-            $eligibleUserIds = User::query()->whereKeyNot(1)->pluck('id');
-        }
+        $eligibleUserIds = User::query()->pluck('id');
 
         Patient::factory()
             ->count(20)
             ->make()
             ->each(function (Patient $patient) use ($eligibleUserIds): void {
-                $patient->user_id = $eligibleUserIds->random();
+                $patient->user_id = $eligibleUserIds->isEmpty() ? null : $eligibleUserIds->random();
                 $patient->save();
 
                 PatientHistoryEntry::factory()
                     ->count(fake()->numberBetween(1, 4))
                     ->create([
                         'patient_id' => $patient->id,
-                        'created_by' => $eligibleUserIds->random(),
+                        'created_by' => $eligibleUserIds->isEmpty() ? null : $eligibleUserIds->random(),
                     ]);
             });
     }

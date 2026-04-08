@@ -26,9 +26,18 @@ const sidebarNavItems: NavItem[] = [
         href: editAppearance(),
         icon: null,
     },
+    {
+        title: 'System Setting',
+        href: '/settings/system',
+        icon: null,
+    },
 ];
 
-export default function SettingsLayout({ children }: PropsWithChildren) {
+type SettingsLayoutProps = PropsWithChildren<{
+    contentClassName?: string;
+}>;
+
+export default function SettingsLayout({ children, contentClassName }: SettingsLayoutProps) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     // When server-side rendering, we only render the layout on the client...
@@ -72,8 +81,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <Separator className="my-6 lg:hidden" />
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
+                <div className="flex-1">
+                    <section className={cn('max-w-xl space-y-12', contentClassName)}>
                         {children}
                     </section>
                 </div>

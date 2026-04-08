@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Tenant;
 use App\Models\User;
+use Database\Seeders\SettingsPermissionSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class EnsureTenantUserCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Ensure the tenant has at least one user; runs UserSeeder if the users table is empty.';
+    protected $description = 'Ensure the tenant has at least one user; runs SettingsPermissionSeeder then UserSeeder if the users table is empty.';
 
     /**
      * Execute the console command.
@@ -60,14 +61,19 @@ class EnsureTenantUserCommand extends Command
             'users_table_count' => $userCount,
         ]);
 
-        if ($userCount > 0) {
-            Log::info('ensure-tenant-user: skipping (users already exist)');
-            $this->line('skipped');
-
-            return self::SUCCESS;
-        }
-
         try {
+            $this->call('db:seed', [
+                '--class' => SettingsPermissionSeeder::class,
+                '--database' => $tenantConnection,
+            ]);
+
+            if ($userCount > 0) {
+                Log::info('ensure-tenant-user: user seeding skipped (users already exist), permissions ensured');
+                $this->line('skipped');
+
+                return self::SUCCESS;
+            }
+
             $this->call('db:seed', [
                 '--class' => UserSeeder::class,
                 '--database' => $tenantConnection,
