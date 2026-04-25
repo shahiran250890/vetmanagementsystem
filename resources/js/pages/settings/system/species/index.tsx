@@ -1,10 +1,9 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type Species = { id: number; name: string; code: string; is_enabled: boolean; breeds_count: number };
@@ -17,9 +16,7 @@ export default function SpeciesIndex({ species, editingSpecies, formMode = 'crea
     const isEdit = formMode === 'edit' && editingSpecies;
     const action = isEdit ? `/settings/system/species/${editingSpecies.id}` : '/settings/system/species';
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="System Setting - Species Management" />
-            <SettingsLayout>
+        <SystemLayout pageTitle="System Setting - Species Management" breadcrumbs={breadcrumbs} contentClassName="max-w-xl">
                 <div className="space-y-4">
                     {(canCreateSpecies || canUpdateSpecies) && (
                         <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
@@ -43,7 +40,6 @@ export default function SpeciesIndex({ species, editingSpecies, formMode = 'crea
                         </div>
                     ))}
                 </div>
-            </SettingsLayout>
-        </AppLayout>
+        </SystemLayout>
     );
 }

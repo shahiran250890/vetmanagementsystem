@@ -7,7 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\RoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,12 +23,22 @@ class RoleController extends Controller
         return 'role';
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorizeResourcePermission('view');
 
+        $search = $request->string('search')->trim()->toString();
+
         return Inertia::render('settings/system/roles/index', [
-            'roles' => Role::query()->with('permissions:id,name')->orderBy('name')->get(),
+            'roles' => Role::query()
+                ->with('permissions:id,name')
+                ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+                ->orderBy('name')
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => [
+                'search' => $search,
+            ],
             ...$this->resourcePermissionProps(),
         ]);
     }
@@ -35,7 +48,6 @@ class RoleController extends Controller
         $this->authorizeResourcePermission('create');
 
         return Inertia::render('settings/system/roles/index', [
-            'roles' => Role::query()->with('permissions:id,name')->orderBy('name')->get(),
             'permissions' => Permission::query()->orderBy('name')->get(['id', 'name']),
             'formMode' => 'create',
             ...$this->resourcePermissionProps(),
@@ -59,7 +71,6 @@ class RoleController extends Controller
         $this->authorizeResourcePermission('update');
 
         return Inertia::render('settings/system/roles/index', [
-            'roles' => Role::query()->with('permissions:id,name')->orderBy('name')->get(),
             'editingRole' => $role->load('permissions:id,name'),
             'permissions' => Permission::query()->orderBy('name')->get(['id', 'name']),
             'formMode' => 'edit',
@@ -80,6 +91,27 @@ class RoleController extends Controller
     public function destroy(Role $role): RedirectResponse
     {
         $this->authorizeResourcePermission('delete');
+
+        if (strcasecmp($role->name, 'superadmin') === 0) {
+            throw ValidationException::withMessages([
+                'delete' => 'The superadmin role cannot be deleted.',
+            ]);
+        }
+
+        $assignedUsersCount = User::query()
+            ->whereHas('roles', fn ($query) => $query->whereKey($role->getKey()))
+            ->count();
+
+        if ($assignedUsersCount > 0) {
+            throw ValidationException::withMessages([
+                'delete' => trans_choice(
+                    'This role is assigned to :count user. Reassign users before deleting.|This role is assigned to :count users. Reassign users before deleting.',
+                    $assignedUsersCount,
+                    ['count' => $assignedUsersCount]
+                ),
+            ]);
+        }
+
         $role->delete();
 
         return to_route('settings.system.roles.index');

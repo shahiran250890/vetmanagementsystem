@@ -1,10 +1,9 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type Breed = { id: number; species_id: number; name: string; code: string; is_enabled: boolean; species?: { id: number; name: string } };
@@ -18,9 +17,7 @@ export default function BreedsIndex({ breeds, speciesOptions, editingBreed, form
     const isEdit = formMode === 'edit' && editingBreed;
     const action = isEdit ? `/settings/system/breeds/${editingBreed.id}` : '/settings/system/breeds';
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="System Setting - Breed Management" />
-            <SettingsLayout>
+        <SystemLayout pageTitle="System Setting - Breed Management" breadcrumbs={breadcrumbs} contentClassName="max-w-xl">
                 <div className="space-y-4">
                     {(canCreateBreed || canUpdateBreed) && (
                         <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
@@ -52,7 +49,6 @@ export default function BreedsIndex({ breeds, speciesOptions, editingBreed, form
                         </div>
                     ))}
                 </div>
-            </SettingsLayout>
-        </AppLayout>
+        </SystemLayout>
     );
 }

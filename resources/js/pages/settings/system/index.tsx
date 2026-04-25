@@ -1,8 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import { KeyRound, ShieldCheck, SlidersHorizontal, UserCog, UsersRound } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'System Setting', href: '/settings/system' }];
@@ -17,9 +16,7 @@ const systemLinks = [
 
 export default function SystemSettingIndex() {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="System Setting" />
-            <SettingsLayout contentClassName="max-w-none">
+        <SystemLayout pageTitle="System Setting" breadcrumbs={breadcrumbs}>
                 <div className="space-y-4">
                     <div>
                         <h2 className="text-lg font-semibold">System Setting</h2>
@@ -37,7 +34,6 @@ export default function SystemSettingIndex() {
                         ))}
                     </div>
                 </div>
-            </SettingsLayout>
-        </AppLayout>
+        </SystemLayout>
     );
 }

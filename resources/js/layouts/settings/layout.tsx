@@ -1,43 +1,27 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
+import { defaultSettingsNav } from '@/config/settings-nav';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
-    {
-        title: 'System Setting',
-        href: '/settings/system',
-        icon: null,
-    },
-];
-
 type SettingsLayoutProps = PropsWithChildren<{
+    title?: string;
+    description?: string;
+    navItems?: NavItem[];
     contentClassName?: string;
 }>;
 
-export default function SettingsLayout({ children, contentClassName }: SettingsLayoutProps) {
+export default function SettingsLayout({
+    children,
+    title = 'Settings',
+    description = 'Manage your profile and account settings',
+    navItems = defaultSettingsNav,
+    contentClassName,
+}: SettingsLayoutProps) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     // When server-side rendering, we only render the layout on the client...
@@ -48,8 +32,8 @@ export default function SettingsLayout({ children, contentClassName }: SettingsL
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title={title}
+                description={description}
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
@@ -58,7 +42,7 @@ export default function SettingsLayout({ children, contentClassName }: SettingsL
                         className="flex flex-col space-y-1 space-x-0"
                         aria-label="Settings"
                     >
-                        {sidebarNavItems.map((item, index) => (
+                        {navItems.map((item, index) => (
                             <Button
                                 key={`${toUrl(item.href)}-${index}`}
                                 size="sm"

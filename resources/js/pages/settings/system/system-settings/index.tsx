@@ -1,10 +1,9 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type Setting = { id: number; key: string; label: string; value: string | null; is_enabled: boolean };
@@ -23,9 +22,7 @@ export default function SystemSettingsIndex({
     const isEdit = formMode === 'edit' && editingSetting;
     const action = isEdit ? `/settings/system/system-settings/${editingSetting.id}` : '/settings/system/system-settings';
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="System Setting - System Settings" />
-            <SettingsLayout>
+        <SystemLayout pageTitle="System Setting - System Settings" breadcrumbs={breadcrumbs} contentClassName="max-w-xl">
                 <div className="space-y-6">
                     {(canCreateSystemSetting || canUpdateSystemSetting) && (
                         <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
@@ -52,7 +49,6 @@ export default function SystemSettingsIndex({
                         ))}
                     </div>
                 </div>
-            </SettingsLayout>
-        </AppLayout>
+        </SystemLayout>
     );
 }

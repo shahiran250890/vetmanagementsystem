@@ -1,5 +1,6 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import FormStatusToggle from '@/components/form-status-toggle';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -14,8 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type Role = { id: number; name: string };
@@ -45,6 +45,10 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
     const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
     const [selectedStatusUser, setSelectedStatusUser] = useState<User | null>(null);
     const [showStatusSuccessDialog, setShowStatusSuccessDialog] = useState(false);
+    const [selectedDeleteUser, setSelectedDeleteUser] = useState<User | null>(null);
+    const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
+    const formatRoleName = (roleName: string) =>
+        roleName ? roleName.charAt(0).toUpperCase() + roleName.slice(1) : roleName;
 
     useEffect(() => {
         setIsEnabled(managedUser?.is_enabled ?? true);
@@ -110,10 +114,35 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
         );
     };
 
+    const openDeleteDialog = (user: User) => {
+        if (!canDeleteUser || deletingUserId !== null) {
+            return;
+        }
+
+        setSelectedDeleteUser(user);
+    };
+
+    const confirmDeleteUser = () => {
+        if (!selectedDeleteUser || !canDeleteUser || deletingUserId !== null) {
+            return;
+        }
+
+        setDeletingUserId(selectedDeleteUser.id);
+
+        router.delete(`/settings/system/users/${selectedDeleteUser.id}`, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setSelectedDeleteUser(null);
+            },
+            onFinish: () => {
+                setDeletingUserId(null);
+            },
+        });
+    };
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="System Setting - User Management" />
-            <SettingsLayout contentClassName="max-w-none">
+        <SystemLayout pageTitle="System Setting - User Management" breadcrumbs={breadcrumbs}>
                 <div className="space-y-4">
                     {canCreateUser && ! isFormPage && (
                         <div className="flex items-center justify-between gap-3">
@@ -145,7 +174,7 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
                                             <div className="grid gap-2"><Label htmlFor="password_confirmation">Confirm password</Label><Input id="password_confirmation" type="password" name="password_confirmation" /></div>
                                         </>
                                     )}
-                                    <div className="grid gap-2"><Label>Roles</Label><div className="grid grid-cols-2 gap-2">{roles.map((role) => <label key={role.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="role_ids[]" value={role.id} defaultChecked={selectedRoleIds.has(role.id)} />{role.name}</label>)}</div></div>
+                                    <div className="grid gap-2"><Label>Roles</Label><div className="grid grid-cols-2 gap-2">{roles.map((role) => <label key={role.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="role_ids[]" value={role.id} defaultChecked={selectedRoleIds.has(role.id)} />{formatRoleName(role.name)}</label>)}</div></div>
                                     <FormStatusToggle
                                         id="is_enabled_toggle"
                                         name="is_enabled"
@@ -204,7 +233,16 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
                                                 <td className="px-4 py-3">
                                                     <div className="flex gap-2">
                                                         {canUpdateUser && <Button variant="outline" asChild><Link href={`/settings/system/users/${user.id}/edit`}>Edit</Link></Button>}
-                                                        {canDeleteUser && <Button variant="destructive" onClick={() => router.delete(`/settings/system/users/${user.id}`)}>Delete</Button>}
+                                                        {canDeleteUser && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="destructive"
+                                                                disabled={deletingUserId !== null}
+                                                                onClick={() => openDeleteDialog(user)}
+                                                            >
+                                                                Delete
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -285,7 +323,20 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </SettingsLayout>
-        </AppLayout>
+                <ConfirmDeleteDialog
+                    open={selectedDeleteUser !== null}
+                    title="Delete user"
+                    description={
+                        selectedDeleteUser
+                            ? `Are you sure you want to delete ${selectedDeleteUser.name}? This action cannot be undone.`
+                            : ''
+                    }
+                    confirmLabel="Delete user"
+                    processing={deletingUserId !== null}
+                    onOpenChange={(open) => !open && deletingUserId === null && setSelectedDeleteUser(null)}
+                    onCancel={() => setSelectedDeleteUser(null)}
+                    onConfirm={confirmDeleteUser}
+                />
+        </SystemLayout>
     );
 }
