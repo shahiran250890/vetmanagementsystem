@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\User;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -16,7 +17,7 @@ class UserStatusToggleRequest extends FormRequest
         $managedUser = $this->route('managed_user');
 
         return $managedUser instanceof User
-            && ($this->user()?->can('update user') ?? false);
+            && SettingsPermissionName::userCanAny($this->user(), 'update', 'user');
     }
 
     /**

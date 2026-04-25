@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\Permission;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class PermissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $permission = $this->route('permission') instanceof Permission
-            ? 'update permission'
-            : 'create permission';
+        $ability = $this->route('permission') instanceof Permission
+            ? 'update'
+            : 'create';
 
-        return $this->user()?->can($permission) ?? false;
+        return SettingsPermissionName::userCanAny($this->user(), $ability, 'permission');
     }
 
     /**
@@ -32,7 +33,13 @@ class PermissionRequest extends FormRequest
         $permission = $this->route('permission');
 
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($permission?->id)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9]+(?:\.[a-z0-9_]+){3,}$/',
+                Rule::unique('permissions', 'name')->ignore($permission?->id),
+            ],
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\SpeciesRequest;
 use App\Models\Settings\Species;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,12 +20,21 @@ class SpeciesController extends Controller
         return 'species';
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorizeResourcePermission('view');
+        $search = $request->string('search')->trim()->toString();
 
         return Inertia::render('settings/system/species/index', [
-            'species' => Species::query()->withCount('breeds')->latest()->get(),
+            'species' => Species::query()
+                ->withCount('breeds')
+                ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+                ->orderBy('name')
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => [
+                'search' => $search,
+            ],
             ...$this->resourcePermissionProps(),
         ]);
     }
@@ -34,7 +44,7 @@ class SpeciesController extends Controller
         $this->authorizeResourcePermission('create');
 
         return Inertia::render('settings/system/species/index', [
-            'species' => Species::query()->withCount('breeds')->latest()->get(),
+            'species' => Species::query()->withCount('breeds')->orderBy('name')->paginate(10),
             'formMode' => 'create',
             ...$this->resourcePermissionProps(),
         ]);
@@ -52,7 +62,7 @@ class SpeciesController extends Controller
         $this->authorizeResourcePermission('update');
 
         return Inertia::render('settings/system/species/index', [
-            'species' => Species::query()->withCount('breeds')->latest()->get(),
+            'species' => Species::query()->withCount('breeds')->orderBy('name')->paginate(10),
             'editingSpecies' => $species,
             'formMode' => 'edit',
             ...$this->resourcePermissionProps(),

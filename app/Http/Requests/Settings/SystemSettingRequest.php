@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\Settings\SystemSetting;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class SystemSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $permission = $this->route('system_setting') instanceof SystemSetting
-            ? 'update system setting'
-            : 'create system setting';
+        $ability = $this->route('system_setting') instanceof SystemSetting
+            ? 'update'
+            : 'create';
 
-        return $this->user()?->can($permission) ?? false;
+        return SettingsPermissionName::userCanAny($this->user(), $ability, 'system setting');
     }
 
     /**

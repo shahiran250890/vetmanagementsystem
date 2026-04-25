@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PermissionRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\SettingsPermissionName;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -53,7 +54,7 @@ class PermissionController extends Controller
     public function store(PermissionRequest $request): RedirectResponse
     {
         Permission::query()->create([
-            'name' => $request->string('name')->toString(),
+            'name' => SettingsPermissionName::normalizePermissionInput($request->string('name')->toString()),
             'guard_name' => 'web',
         ]);
 
@@ -75,7 +76,7 @@ class PermissionController extends Controller
     public function update(PermissionRequest $request, Permission $permission): RedirectResponse
     {
         $permission->update([
-            'name' => $request->string('name')->toString(),
+            'name' => SettingsPermissionName::normalizePermissionInput($request->string('name')->toString()),
         ]);
 
         return to_route('settings.system.permissions.index');

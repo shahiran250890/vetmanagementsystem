@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\Role;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class RoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $permission = $this->route('role') instanceof Role
-            ? 'update role'
-            : 'create role';
+        $ability = $this->route('role') instanceof Role
+            ? 'update'
+            : 'create';
 
-        return $this->user()?->can($permission) ?? false;
+        return SettingsPermissionName::userCanAny($this->user(), $ability, 'role');
     }
 
     /**

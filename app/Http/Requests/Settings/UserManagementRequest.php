@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\User;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class UserManagementRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $permission = $this->route('managed_user') instanceof User
-            ? 'update user'
-            : 'create user';
+        $ability = $this->route('managed_user') instanceof User
+            ? 'update'
+            : 'create';
 
-        return $this->user()?->can($permission) ?? false;
+        return SettingsPermissionName::userCanAny($this->user(), $ability, 'user');
     }
 
     /**

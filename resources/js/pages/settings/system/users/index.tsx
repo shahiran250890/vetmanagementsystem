@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import FormStatusToggle from '@/components/form-status-toggle';
 import InputError from '@/components/input-error';
+import ListPagination from '@/components/system/list-pagination';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -16,18 +17,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import SystemLayout from '@/layouts/settings/system-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, PaginatedCollection } from '@/types';
 
 type Role = { id: number; name: string };
 type User = { id: number; name: string; email: string; phone: string | null; is_enabled: boolean; roles: Role[] };
-type PaginatedUsers = {
-    data: User[];
-    current_page: number;
-    last_page: number;
-    total: number;
-    from: number | null;
-    to: number | null;
-};
+type PaginatedUsers = PaginatedCollection<User>;
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'System Setting', href: '/settings/system' },
     { title: 'User Management', href: '/settings/system/users' },
@@ -252,30 +246,15 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
                             </table>
                         </div>
                     )}
-                    {! isFormPage && users.last_page > 1 && (
-                        <div className="flex items-center justify-between rounded border px-4 py-3 text-sm">
-                            <p className="text-muted-foreground">
-                                Showing {users.from ?? 0} to {users.to ?? 0} of {users.total}
-                            </p>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={users.current_page <= 1}
-                                    onClick={() => goToPage(users.current_page - 1)}
-                                >
-                                    Previous
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={users.current_page >= users.last_page}
-                                    onClick={() => goToPage(users.current_page + 1)}
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+                    {! isFormPage && (
+                        <ListPagination
+                            currentPage={users.current_page}
+                            lastPage={users.last_page}
+                            from={users.from}
+                            to={users.to}
+                            total={users.total}
+                            onPageChange={goToPage}
+                        />
                     )}
                 </div>
                 <Dialog open={selectedStatusUser !== null} onOpenChange={(open) => !open && updatingUserId === null && setSelectedStatusUser(null)}>

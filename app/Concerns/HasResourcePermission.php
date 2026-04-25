@@ -2,8 +2,9 @@
 
 namespace App\Concerns;
 
+use App\Support\SettingsPermissionName;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Throwable;
 
 trait HasResourcePermission
 {
@@ -11,14 +12,7 @@ trait HasResourcePermission
 
     protected function authorizeResourcePermission(string $ability): void
     {
-        $permission = "{$ability} {$this->resourcePermissionName()}";
-        $can = false;
-
-        try {
-            $can = auth()->user()?->can($permission) ?? false;
-        } catch (Throwable) {
-            $can = false;
-        }
+        $can = SettingsPermissionName::userCanAny(Auth::user(), $ability, $this->resourcePermissionName());
 
         abort_unless($can, 403);
     }
@@ -32,10 +26,10 @@ trait HasResourcePermission
         $studly = Str::studly(str_replace(' ', '_', $resource));
 
         return [
-            "canView{$studly}" => auth()->user()?->can("view {$resource}") ?? false,
-            "canCreate{$studly}" => auth()->user()?->can("create {$resource}") ?? false,
-            "canUpdate{$studly}" => auth()->user()?->can("update {$resource}") ?? false,
-            "canDelete{$studly}" => auth()->user()?->can("delete {$resource}") ?? false,
+            "canView{$studly}" => SettingsPermissionName::userCanAny(Auth::user(), 'view', $resource),
+            "canCreate{$studly}" => SettingsPermissionName::userCanAny(Auth::user(), 'create', $resource),
+            "canUpdate{$studly}" => SettingsPermissionName::userCanAny(Auth::user(), 'update', $resource),
+            "canDelete{$studly}" => SettingsPermissionName::userCanAny(Auth::user(), 'delete', $resource),
         ];
     }
 }

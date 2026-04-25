@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\Settings\Species;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class SpeciesRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $permission = $this->route('species') instanceof Species
-            ? 'update species'
-            : 'create species';
+        $ability = $this->route('species') instanceof Species
+            ? 'update'
+            : 'create';
 
-        return $this->user()?->can($permission) ?? false;
+        return SettingsPermissionName::userCanAny($this->user(), $ability, 'species');
     }
 
     /**

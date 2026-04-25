@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use App\Models\Settings\Breed;
+use App\Support\SettingsPermissionName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class BreedRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $permission = $this->route('breed') instanceof Breed
-            ? 'update breed'
-            : 'create breed';
+        $ability = $this->route('breed') instanceof Breed
+            ? 'update'
+            : 'create';
 
-        return $this->user()?->can($permission) ?? false;
+        return SettingsPermissionName::userCanAny($this->user(), $ability, 'breed');
     }
 
     /**

@@ -1,10 +1,13 @@
 import { Form, Link, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import InputError from '@/components/input-error';
+import ListPagination from '@/components/system/list-pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, PaginatedCollection } from '@/types';
 
 type Species = { id: number; name: string; code: string; is_enabled: boolean; breeds_count: number };
 const breadcrumbs: BreadcrumbItem[] = [
@@ -12,34 +15,178 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Species Management', href: '/settings/system/species' },
 ];
 
-export default function SpeciesIndex({ species, editingSpecies, formMode = 'create', canCreateSpecies, canUpdateSpecies, canDeleteSpecies }: { species: Species[]; editingSpecies?: Species; formMode?: 'create'|'edit'; canCreateSpecies: boolean; canUpdateSpecies: boolean; canDeleteSpecies: boolean }) {
+export default function SpeciesIndex({
+    species,
+    editingSpecies,
+    formMode,
+    filters,
+    canCreateSpecies,
+    canUpdateSpecies,
+    canDeleteSpecies,
+}: {
+    species: PaginatedCollection<Species>;
+    editingSpecies?: Species;
+    formMode?: 'create'|'edit';
+    filters?: { search?: string };
+    canCreateSpecies: boolean;
+    canUpdateSpecies: boolean;
+    canDeleteSpecies: boolean;
+}) {
     const isEdit = formMode === 'edit' && editingSpecies;
+    const isFormPage = formMode === 'create' || formMode === 'edit';
     const action = isEdit ? `/settings/system/species/${editingSpecies.id}` : '/settings/system/species';
+    const [search, setSearch] = useState(filters?.search ?? '');
+    const [debouncedSearch, setDebouncedSearch] = useState(filters?.search ?? '');
+    const [selectedDeleteSpecies, setSelectedDeleteSpecies] = useState<Species | null>(null);
+    const [deletingSpeciesId, setDeletingSpeciesId] = useState<number | null>(null);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
+
+    useEffect(() => {
+        if (isFormPage || debouncedSearch === (filters?.search ?? '')) {
+            return;
+        }
+
+        router.get('/settings/system/species', { search: debouncedSearch, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
+    }, [debouncedSearch, filters?.search, isFormPage]);
+
+    const goToPage = (page: number) => {
+        router.get('/settings/system/species', { search: filters?.search ?? '', page }, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const confirmDeleteSpecies = () => {
+        if (!selectedDeleteSpecies || !canDeleteSpecies || deletingSpeciesId !== null) {
+            return;
+        }
+
+        setDeletingSpeciesId(selectedDeleteSpecies.id);
+        router.delete(`/settings/system/species/${selectedDeleteSpecies.id}`, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setSelectedDeleteSpecies(null);
+            },
+            onFinish: () => {
+                setDeletingSpeciesId(null);
+            },
+        });
+    };
+
     return (
-        <SystemLayout pageTitle="System Setting - Species Management" breadcrumbs={breadcrumbs} contentClassName="max-w-xl">
-                <div className="space-y-4">
-                    {(canCreateSpecies || canUpdateSpecies) && (
-                        <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
-                            {({ errors, processing }) => (
-                                <>
-                                    <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={editingSpecies?.name} /><InputError message={errors.name} /></div>
-                                    <div className="grid gap-2"><Label htmlFor="code">Code</Label><Input id="code" name="code" defaultValue={editingSpecies?.code} /><InputError message={errors.code} /></div>
-                                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_enabled" value="1" defaultChecked={editingSpecies?.is_enabled ?? true} /> Enabled</label>
-                                    <Button disabled={processing}>{isEdit ? 'Update' : 'Create'} species</Button>
-                                </>
-                            )}
-                        </Form>
-                    )}
-                    {species.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between rounded border p-3">
-                            <div><p className="font-medium">{item.name} ({item.code})</p><p className="text-sm text-muted-foreground">{item.breeds_count} breeds</p></div>
-                            <div className="flex gap-2">
-                                {canUpdateSpecies && <Button variant="outline" asChild><Link href={`/settings/system/species/${item.id}/edit`}>Edit</Link></Button>}
-                                {canDeleteSpecies && <Button variant="destructive" onClick={() => router.delete(`/settings/system/species/${item.id}`)}>Delete</Button>}
-                            </div>
+        <SystemLayout pageTitle="System Setting - Species Management" breadcrumbs={breadcrumbs}>
+            <div className="space-y-4">
+                {!isFormPage && (
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-1 items-center gap-2">
+                            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search species name" />
                         </div>
-                    ))}
-                </div>
+                        {canCreateSpecies && (
+                            <Button asChild>
+                                <Link href="/settings/system/species/create">Add species</Link>
+                            </Button>
+                        )}
+                    </div>
+                )}
+                {isFormPage && (canCreateSpecies || canUpdateSpecies) && (
+                    <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
+                        {({ errors, processing }) => (
+                            <>
+                                <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={editingSpecies?.name} /><InputError message={errors.name} /></div>
+                                <div className="grid gap-2"><Label htmlFor="code">Code</Label><Input id="code" name="code" defaultValue={editingSpecies?.code} /><InputError message={errors.code} /></div>
+                                <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_enabled" value="1" defaultChecked={editingSpecies?.is_enabled ?? true} /> Enabled</label>
+                                <div className="flex gap-2">
+                                    <Button disabled={processing}>{isEdit ? 'Update' : 'Create'}</Button>
+                                    <Button variant="outline" asChild>
+                                        <Link href="/settings/system/species">Back</Link>
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </Form>
+                )}
+                {!isFormPage && (
+                    <div className="overflow-x-auto rounded-lg border">
+                        <table className="w-full min-w-[800px] text-left text-sm">
+                            <thead className="bg-muted/30">
+                                <tr>
+                                    <th className="px-4 py-3">Name</th>
+                                    <th className="px-4 py-3">Code</th>
+                                    <th className="px-4 py-3">Breeds</th>
+                                    <th className="px-4 py-3">Status</th>
+                                    <th className="px-4 py-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {species.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                                            No species found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    species.data.map((item) => (
+                                        <tr key={item.id} className="border-t">
+                                            <td className="px-4 py-3 font-medium">{item.name}</td>
+                                            <td className="px-4 py-3 text-muted-foreground">{item.code}</td>
+                                            <td className="px-4 py-3 text-muted-foreground">{item.breeds_count}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${item.is_enabled ? 'bg-green-500/15 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+                                                    {item.is_enabled ? 'Enabled' : 'Disabled'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex gap-2">
+                                                    {canUpdateSpecies && <Button variant="outline" asChild><Link href={`/settings/system/species/${item.id}/edit`}>Edit</Link></Button>}
+                                                    {canDeleteSpecies && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            disabled={deletingSpeciesId !== null}
+                                                            onClick={() => setSelectedDeleteSpecies(item)}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+                {!isFormPage && (
+                    <ListPagination
+                        currentPage={species.current_page}
+                        lastPage={species.last_page}
+                        from={species.from}
+                        to={species.to}
+                        total={species.total}
+                        onPageChange={goToPage}
+                    />
+                )}
+            </div>
+            <ConfirmDeleteDialog
+                open={selectedDeleteSpecies !== null}
+                title="Delete species"
+                description={
+                    selectedDeleteSpecies
+                        ? `Are you sure you want to delete ${selectedDeleteSpecies.name}? This action cannot be undone.`
+                        : ''
+                }
+                confirmLabel="Delete species"
+                processing={deletingSpeciesId !== null}
+                onOpenChange={(open) => !open && deletingSpeciesId === null && setSelectedDeleteSpecies(null)}
+                onCancel={() => setSelectedDeleteSpecies(null)}
+                onConfirm={confirmDeleteSpecies}
+            />
         </SystemLayout>
     );
 }

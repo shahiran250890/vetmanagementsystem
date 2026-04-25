@@ -1,23 +1,17 @@
 import { Form, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import ListPagination from '@/components/system/list-pagination';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, PaginatedCollection } from '@/types';
 
 type Permission = { id: number; name: string };
 type Role = { id: number; name: string; permissions: Permission[] };
-type PaginatedRoles = {
-    data: Role[];
-    current_page: number;
-    last_page: number;
-    total: number;
-    from: number | null;
-    to: number | null;
-};
+type PaginatedRoles = PaginatedCollection<Role>;
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'System Setting', href: '/settings/system' },
     { title: 'Role Management', href: '/settings/system/roles' },
@@ -158,30 +152,15 @@ export default function RolesIndex({ roles, permissions = [], editingRole, formM
                         </table>
                     </div>
                 )}
-                {!isFormPage && roles && roles.last_page > 1 && (
-                    <div className="flex items-center justify-between rounded border px-4 py-3 text-sm">
-                        <p className="text-muted-foreground">
-                            Showing {roles.from ?? 0} to {roles.to ?? 0} of {roles.total}
-                        </p>
-                        <div className="flex gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={roles.current_page <= 1}
-                                onClick={() => goToPage(roles.current_page - 1)}
-                            >
-                                Previous
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={roles.current_page >= roles.last_page}
-                                onClick={() => goToPage(roles.current_page + 1)}
-                            >
-                                Next
-                            </Button>
-                        </div>
-                    </div>
+                {!isFormPage && roles && (
+                    <ListPagination
+                        currentPage={roles.current_page}
+                        lastPage={roles.last_page}
+                        from={roles.from}
+                        to={roles.to}
+                        total={roles.total}
+                        onPageChange={goToPage}
+                    />
                 )}
             </div>
             <ConfirmDeleteDialog

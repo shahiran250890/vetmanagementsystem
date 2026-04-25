@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\SystemSettingRequest;
 use App\Models\Settings\SystemSetting;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,12 +20,24 @@ class SystemSettingController extends Controller
         return 'system setting';
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorizeResourcePermission('view');
+        $search = $request->string('search')->trim()->toString();
 
         return Inertia::render('settings/system/system-settings/index', [
-            'settings' => SystemSetting::query()->latest()->get(),
+            'settings' => SystemSetting::query()
+                ->when(
+                    $search !== '',
+                    fn ($query) => $query->where('key', 'like', "%{$search}%")
+                        ->orWhere('label', 'like', "%{$search}%")
+                )
+                ->orderBy('key')
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => [
+                'search' => $search,
+            ],
             ...$this->resourcePermissionProps(),
         ]);
     }
@@ -34,7 +47,7 @@ class SystemSettingController extends Controller
         $this->authorizeResourcePermission('create');
 
         return Inertia::render('settings/system/system-settings/index', [
-            'settings' => SystemSetting::query()->latest()->get(),
+            'settings' => SystemSetting::query()->orderBy('key')->paginate(10),
             'formMode' => 'create',
             ...$this->resourcePermissionProps(),
         ]);
@@ -52,7 +65,7 @@ class SystemSettingController extends Controller
         $this->authorizeResourcePermission('update');
 
         return Inertia::render('settings/system/system-settings/index', [
-            'settings' => SystemSetting::query()->latest()->get(),
+            'settings' => SystemSetting::query()->orderBy('key')->paginate(10),
             'editingSetting' => $system_setting,
             'formMode' => 'edit',
             ...$this->resourcePermissionProps(),

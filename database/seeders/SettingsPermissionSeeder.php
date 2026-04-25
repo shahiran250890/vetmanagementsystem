@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Module;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\SettingsPermissionName;
 use Illuminate\Database\Seeder;
 
 class SettingsPermissionSeeder extends Seeder
@@ -13,19 +15,17 @@ class SettingsPermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $resources = [
-            'system setting',
-            'user',
-            'species',
-            'role',
-            'permission',
-        ];
+        $settingsModule = Module::query()->firstOrCreate(
+            ['key' => 'settings'],
+            ['name' => 'System Setting', 'is_enabled' => true],
+        );
 
-        $abilities = ['view', 'create', 'update', 'delete'];
+        foreach (SettingsPermissionName::legacyToCanonicalMap() as $permissionName) {
+            $permission = Permission::findOrCreate($permissionName, 'web');
 
-        foreach ($resources as $resource) {
-            foreach ($abilities as $ability) {
-                Permission::findOrCreate("{$ability} {$resource}", 'web');
+            if ($permission->module_id !== $settingsModule->id) {
+                $permission->module()->associate($settingsModule);
+                $permission->save();
             }
         }
 
