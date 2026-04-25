@@ -49,7 +49,7 @@ class PatientResource extends JsonResource
             'human_profile' => $this->whenLoaded('humanProfile', fn (): ?array => $this->humanProfile ? [
                 'identification_number' => $this->humanProfile->identification_number,
                 'blood_type_id' => $this->humanProfile->blood_type_id,
-                'blood_type' => $this->humanProfile->bloodType?->name ?? $this->humanProfile->blood_type,
+                'blood_type' => $this->humanProfile->blood_type,
                 'primary_phone' => $this->humanProfile->primary_phone,
                 'address' => $this->humanProfile->address,
                 'height_cm' => $this->humanProfile->height_cm,

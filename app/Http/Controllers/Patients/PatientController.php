@@ -68,7 +68,10 @@ class PatientController extends Controller
 
     public function edit(Patient $patient): Response
     {
-        $patient = $patient->load(['animalProfile', 'humanProfile.bloodType']);
+        $patient = $patient->load([
+            'animalProfile',
+            $this->hasBloodTypesTable() ? 'humanProfile.bloodType' : 'humanProfile',
+        ]);
 
         return Inertia::render('patients/edit', [
             'patient' => PatientResource::make($patient)->resolve(),
@@ -117,7 +120,7 @@ class PatientController extends Controller
      */
     protected function bloodTypeOptions(): array
     {
-        if (! Schema::connection('tenant')->hasTable('blood_types')) {
+        if (! $this->hasBloodTypesTable()) {
             return [];
         }
 
@@ -133,6 +136,11 @@ class PatientController extends Controller
             ->all();
 
         return $bloodTypes;
+    }
+
+    protected function hasBloodTypesTable(): bool
+    {
+        return Schema::connection('tenant')->hasTable('blood_types');
     }
 
     /**

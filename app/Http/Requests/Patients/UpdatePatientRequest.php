@@ -4,6 +4,7 @@ namespace App\Http\Requests\Patients;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class UpdatePatientRequest extends FormRequest
@@ -11,6 +12,22 @@ class UpdatePatientRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $payload = $this->all();
+        $patientType = $this->input('patient_type');
+
+        if ($patientType === 'human') {
+            unset($payload['animal_profile']);
+        }
+
+        if ($patientType === 'animal') {
+            unset($payload['human_profile']);
+        }
+
+        $this->replace($payload);
     }
 
     /**
@@ -45,7 +62,7 @@ class UpdatePatientRequest extends FormRequest
         $isAnimal = $this->input('patient_type') === 'animal';
 
         return [
-            'animal_profile.owner_user_id' => [$isAnimal ? 'nullable' : 'prohibited', 'integer', 'exists:users,id'],
+            'animal_profile.owner_user_id' => [$isAnimal ? 'nullable' : 'prohibited', 'integer', 'exists:tenant.users,id'],
             'animal_profile.species' => [$isAnimal ? 'required' : 'prohibited', 'string', 'max:255'],
             'animal_profile.breed' => [$isAnimal ? 'nullable' : 'prohibited', 'string', 'max:255'],
             'animal_profile.color' => [$isAnimal ? 'nullable' : 'prohibited', 'string', 'max:255'],
@@ -66,10 +83,13 @@ class UpdatePatientRequest extends FormRequest
     protected function humanRules(): array
     {
         $isHuman = $this->input('patient_type') === 'human';
+        $bloodTypeRule = $this->hasBloodTypesTable()
+            ? ['integer', 'exists:tenant.blood_types,id']
+            : ['nullable'];
 
         return [
             'human_profile.identification_number' => [$isHuman ? 'nullable' : 'prohibited', 'string', 'max:255'],
-            'human_profile.blood_type_id' => [$isHuman ? 'nullable' : 'prohibited', 'integer', 'exists:blood_types,id'],
+            'human_profile.blood_type_id' => [$isHuman ? 'nullable' : 'prohibited', ...$bloodTypeRule],
             'human_profile.primary_phone' => [$isHuman ? 'nullable' : 'prohibited', 'string', 'max:50'],
             'human_profile.address' => [$isHuman ? 'nullable' : 'prohibited', 'string'],
             'human_profile.height_cm' => [$isHuman ? 'nullable' : 'prohibited', 'numeric', 'min:30', 'max:260'],
@@ -77,6 +97,11 @@ class UpdatePatientRequest extends FormRequest
             'human_profile.blood_pressure' => [$isHuman ? 'nullable' : 'prohibited', 'string', 'max:20'],
             'human_profile.vital_medical_information' => [$isHuman ? 'nullable' : 'prohibited', 'string'],
         ];
+    }
+
+    protected function hasBloodTypesTable(): bool
+    {
+        return Schema::connection('tenant')->hasTable('blood_types');
     }
 
     /**

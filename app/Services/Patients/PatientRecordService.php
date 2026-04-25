@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PatientRecordService
 {
@@ -42,7 +43,7 @@ class PatientRecordService
             $patient = Patient::query()->create($this->patientPayload($validated));
             $this->syncProfiles($patient, $validated);
 
-            return $patient->load(['animalProfile.owner', 'humanProfile.bloodType']);
+            return $patient->load($this->patientRelationsForRead());
         });
     }
 
@@ -55,15 +56,14 @@ class PatientRecordService
             $patient->update($this->patientPayload($validated));
             $this->syncProfiles($patient, $validated);
 
-            return $patient->fresh(['animalProfile.owner', 'humanProfile.bloodType', 'user']);
+            return $patient->fresh(array_merge($this->patientRelationsForRead(), ['user']));
         });
     }
 
     public function show(Patient $patient): Patient
     {
         return $patient->load([
-            'animalProfile.owner',
-            'humanProfile.bloodType',
+            ...$this->patientRelationsForRead(),
             'user',
             'historyEntries' => fn (HasMany $query): HasMany => $query->latest('entry_date')->latest(),
             'historyEntries.creator',
@@ -129,8 +129,10 @@ class PatientRecordService
         $bloodTypeId = Arr::get($human, 'blood_type_id');
         $bloodTypeName = null;
 
-        if ($bloodTypeId !== null && $bloodTypeId !== '') {
+        if ($this->hasBloodTypesTable() && $bloodTypeId !== null && $bloodTypeId !== '') {
             $bloodTypeName = BloodType::query()->find($bloodTypeId)?->name;
+        } else {
+            $bloodTypeId = null;
         }
 
         $patient->humanProfile()->updateOrCreate(
@@ -148,5 +150,21 @@ class PatientRecordService
             ],
         );
         $patient->animalProfile()?->delete();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function patientRelationsForRead(): array
+    {
+        return [
+            'animalProfile.owner',
+            $this->hasBloodTypesTable() ? 'humanProfile.bloodType' : 'humanProfile',
+        ];
+    }
+
+    protected function hasBloodTypesTable(): bool
+    {
+        return Schema::connection('tenant')->hasTable('blood_types');
     }
 }
