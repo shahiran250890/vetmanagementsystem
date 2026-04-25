@@ -1,44 +1,120 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
-import PatientForm, {
-    type PatientFormData,
-} from '@/components/patients/patient-form';
+import PatientForm from '@/components/patients/patient-form';
 import AppLayout from '@/layouts/app-layout';
+import { create, index, store } from '@/routes/patients';
+import type { FormEvent } from 'react';
 import type { BreadcrumbItem } from '@/types';
-
-type OwnerOption = {
-    id: number;
-    name: string;
-};
+import type {
+    BloodTypeOption,
+    OwnerOption,
+    PatientFormData,
+    SpeciesOption,
+} from '@/types/patient';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Patients', href: '/patients' },
-    { title: 'Create', href: '/patients/create' },
+    { title: 'Patients', href: index() },
+    { title: 'Create', href: create() },
 ];
 
-export default function CreatePatient({ owners }: { owners: OwnerOption[] }) {
+export default function CreatePatient({
+    owners,
+    bloodTypes,
+    speciesOptions,
+}: {
+    owners: OwnerOption[];
+    bloodTypes: BloodTypeOption[];
+    speciesOptions: SpeciesOption[];
+}) {
     const { data, setData, post, processing, errors } = useForm<PatientFormData>({
-        user_id: '',
+        patient_type: 'animal',
         name: '',
-        species: '',
-        breed: '',
         sex: '',
         date_of_birth: '',
-        color: '',
-        microchip_number: '',
         emergency_contact_name: '',
         emergency_contact_phone: '',
         allergies: '',
         current_medications: '',
-        latest_weight_kg: '',
-        vaccination_status: '',
         status: 'active',
         notes: '',
+        animal_profile: {
+            owner_user_id: '',
+            species: '',
+            breed: '',
+            color: '',
+            microchip_number: '',
+            latest_weight_kg: '',
+            vaccination_status: '',
+        },
+        human_profile: {
+            identification_number: '',
+            blood_type_id: '',
+            primary_phone: '',
+            address: '',
+            height_cm: '',
+            weight_kg: '',
+            blood_pressure: '',
+            vital_medical_information: '',
+        },
     });
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        post('/patients');
+        post(store.url());
+    };
+
+    const updateFormData = (key: string, value: string) => {
+        if (key === 'patient_type') {
+            setData({
+                patient_type: value as PatientFormData['patient_type'],
+                name: '',
+                sex: '',
+                date_of_birth: '',
+                emergency_contact_name: '',
+                emergency_contact_phone: '',
+                allergies: '',
+                current_medications: '',
+                status: 'active',
+                notes: '',
+                animal_profile: {
+                    owner_user_id: '',
+                    species: '',
+                    breed: '',
+                    color: '',
+                    microchip_number: '',
+                    latest_weight_kg: '',
+                    vaccination_status: '',
+                },
+                human_profile: {
+                    identification_number: '',
+                    blood_type_id: '',
+                    primary_phone: '',
+                    address: '',
+                    height_cm: '',
+                    weight_kg: '',
+                    blood_pressure: '',
+                    vital_medical_information: '',
+                },
+            });
+            return;
+        }
+
+        if (!key.includes('.')) {
+            setData(key as keyof PatientFormData, value as never);
+            return;
+        }
+
+        const [section, field] = key.split('.') as [
+            keyof Pick<PatientFormData, 'animal_profile' | 'human_profile'>,
+            string,
+        ];
+
+        setData((current) => ({
+            ...current,
+            [section]: {
+                ...current[section],
+                [field]: value,
+            },
+        }));
     };
 
     return (
@@ -47,7 +123,7 @@ export default function CreatePatient({ owners }: { owners: OwnerOption[] }) {
             <div className="space-y-4 p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-xl font-semibold">Create patient</h1>
-                    <Link href="/patients" className="text-sm underline">
+                    <Link href={index()} className="text-sm underline">
                         Back to patients
                     </Link>
                 </div>
@@ -55,10 +131,12 @@ export default function CreatePatient({ owners }: { owners: OwnerOption[] }) {
                 <form onSubmit={submit} className="rounded-lg border p-4">
                     <PatientForm
                         data={data}
-                        setData={setData}
+                        setData={updateFormData}
                         errors={errors}
                         processing={processing}
                         owners={owners}
+                        bloodTypes={bloodTypes}
+                        speciesOptions={speciesOptions}
                         submitLabel="Create patient"
                     />
                 </form>

@@ -5,8 +5,10 @@ test('patient routes are isolated in dedicated route file', function () {
     $webRoutes = file_get_contents(base_path('routes/web.php'));
 
     expect($patientsRoutes)->toContain("prefix('patients')");
-    expect($webRoutes)->not->toContain('patients.');
-    expect($webRoutes)->not->toContain('/patients');
+    expect($webRoutes)->toContain("require __DIR__.'/patients.php';");
+    expect($webRoutes)->not->toContain("prefix('patients')");
+    expect($webRoutes)->not->toContain("name('patients.");
+    expect($webRoutes)->not->toContain("Route::get('/patients");
 });
 
 test('patient controllers avoid direct coupling to other modules', function () {

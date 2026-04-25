@@ -11,7 +11,6 @@ test('history entry can be created for a patient', function () {
         ->actingAs($user)
         ->post(route('patients.history.store', $patient), [
             'entry_date' => now()->toDateString(),
-            'visit_case_number' => 'CASE-1001',
             'visit_at' => now()->toDateTimeString(),
             'clinic_location' => 'Main Branch',
             'veterinarian_user_id' => $user->id,
@@ -26,13 +25,17 @@ test('history entry can be created for a patient', function () {
 
     $response->assertRedirect(route('patients.show', $patient));
 
+    $entry = $patient->historyEntries()->latest('id')->first();
+
     $this->assertDatabaseHas('patient_history_entries', [
         'patient_id' => $patient->id,
         'created_by' => $user->id,
-        'visit_case_number' => 'CASE-1001',
         'visit_status' => 'completed',
         'title' => 'Initial consultation',
     ]);
+
+    expect($entry)->not->toBeNull();
+    expect($entry?->visit_case_number)->toStartWith("CASE-{$patient->id}-");
 });
 
 test('history entry requires required fields', function () {

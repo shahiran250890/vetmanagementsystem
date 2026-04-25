@@ -6,53 +6,25 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import type { BreadcrumbItem } from '@/types';
+import { store as storeHistory } from '@/routes/patients/history';
+import {
+    edit as editPatient,
+    index as patientsIndex,
+    show as showPatient,
+} from '@/routes/patients';
+import type { BreadcrumbItem, PatientRecord } from '@/types';
 
-type Patient = {
-    id: number;
-    name: string;
-    species: string;
-    status: string;
-    breed: string | null;
-    sex: string | null;
-    date_of_birth: string | null;
-    color: string | null;
-    microchip_number: string | null;
-    user?: {
-        name: string;
-    } | null;
-    allergies: string | null;
-    current_medications: string | null;
-    latest_weight_kg: string | null;
-    vaccination_status: string | null;
-    notes: string | null;
-    history_entries: Array<{
-        id: number;
-        entry_date: string;
-        visit_case_number?: string | null;
-        visit_at?: string | null;
-        clinic_location?: string | null;
-        visit_type?: string | null;
-        visit_status?: string | null;
-        appointment_id?: string | null;
-        entry_type: string | null;
-        title: string;
-        details: string;
-        creator?: {
-            name: string;
-        } | null;
-    }>;
-};
+export default function ShowPatient({ patient }: { patient: PatientRecord }) {
+    const sexLabel =
+        patient.sex === '1' ? 'Male' : patient.sex === '2' ? 'Female' : '-';
 
-export default function ShowPatient({ patient }: { patient: Patient }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Patients', href: '/patients' },
-        { title: patient.name, href: `/patients/${patient.id}` },
+        { title: 'Patients', href: patientsIndex() },
+        { title: patient.name, href: showPatient(patient.id) },
     ];
 
     const historyForm = useForm({
         entry_date: '',
-        visit_case_number: '',
         visit_at: '',
         clinic_location: '',
         veterinarian_user_id: '',
@@ -67,7 +39,7 @@ export default function ShowPatient({ patient }: { patient: Patient }) {
 
     const submitHistory = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        historyForm.post(`/patients/${patient.id}/history`, {
+        historyForm.post(storeHistory.url(patient.id), {
             preserveScroll: true,
             onSuccess: () => historyForm.reset(),
         });
@@ -81,38 +53,108 @@ export default function ShowPatient({ patient }: { patient: Patient }) {
                     <h1 className="text-xl font-semibold">{patient.name}</h1>
                     <div className="flex gap-2">
                         <Button asChild variant="outline">
-                            <Link href={`/patients/${patient.id}/edit`}>Edit</Link>
+                            <Link href={editPatient(patient.id)}>
+                                Edit
+                            </Link>
                         </Button>
                         <Button asChild variant="outline">
-                            <Link href="/patients">Back</Link>
+                            <Link href={patientsIndex()}>Back</Link>
                         </Button>
                     </div>
                 </div>
 
                 <section className="grid gap-4 rounded-lg border p-4 md:grid-cols-2">
                     <div>
-                        <p className="text-sm text-muted-foreground">Species</p>
-                        <p>{patient.species}</p>
+                        <p className="text-sm text-muted-foreground">Patient type</p>
+                        <p className="capitalize">{patient.patient_type}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Status</p>
                         <p>{patient.status}</p>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">Owner</p>
-                        <p>{patient.user?.name ?? '-'}</p>
+                        <p className="text-sm text-muted-foreground">Sex</p>
+                        <p>{sexLabel}</p>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">Microchip</p>
-                        <p>{patient.microchip_number ?? '-'}</p>
+                        <p className="text-sm text-muted-foreground">Date of birth</p>
+                        <p>{patient.date_of_birth ?? '-'}</p>
                     </div>
+                    {patient.patient_type === 'animal' ? (
+                        <>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Species</p>
+                                <p>{patient.species ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Owner</p>
+                                <p>{patient.user?.name ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Microchip</p>
+                                <p>{patient.microchip_number ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Weight</p>
+                                <p>{patient.latest_weight_kg ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Vaccination</p>
+                                <p>{patient.vaccination_status ?? '-'}</p>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div>
+                                <p className="text-sm text-muted-foreground">ID number</p>
+                                <p>{patient.human_profile?.identification_number ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Blood type</p>
+                                <p>{patient.human_profile?.blood_type ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Primary phone</p>
+                                <p>{patient.human_profile?.primary_phone ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Address</p>
+                                <p>{patient.human_profile?.address ?? '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Height</p>
+                                <p>
+                                    {patient.human_profile?.height_cm
+                                        ? `${patient.human_profile.height_cm} cm`
+                                        : '-'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Weight</p>
+                                <p>
+                                    {patient.human_profile?.weight_kg
+                                        ? `${patient.human_profile.weight_kg} kg`
+                                        : '-'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    Blood pressure
+                                </p>
+                                <p>{patient.human_profile?.blood_pressure ?? '-'}</p>
+                            </div>
+                        </>
+                    )}
                     <div>
-                        <p className="text-sm text-muted-foreground">Weight</p>
-                        <p>{patient.latest_weight_kg ?? '-'}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-muted-foreground">Vaccination</p>
-                        <p>{patient.vaccination_status ?? '-'}</p>
+                        <p className="text-sm text-muted-foreground">
+                            Emergency contact
+                        </p>
+                        <p>
+                            {patient.emergency_contact_name ?? '-'}{' '}
+                            {patient.emergency_contact_phone
+                                ? `(${patient.emergency_contact_phone})`
+                                : ''}
+                        </p>
                     </div>
                     <div className="md:col-span-2">
                         <p className="text-sm text-muted-foreground">Allergies</p>
@@ -128,15 +170,26 @@ export default function ShowPatient({ patient }: { patient: Patient }) {
                         <p className="text-sm text-muted-foreground">Clinical notes</p>
                         <p>{patient.notes ?? '-'}</p>
                     </div>
+                    {patient.patient_type === 'human' ? (
+                        <div className="md:col-span-2">
+                            <p className="text-sm text-muted-foreground">
+                                Vital medical information
+                            </p>
+                            <p>
+                                {patient.human_profile?.vital_medical_information ??
+                                    '-'}
+                            </p>
+                        </div>
+                    ) : null}
                 </section>
 
                 <section className="space-y-4 rounded-lg border p-4">
-                    <h2 className="text-lg font-medium">Clinical history</h2>
+                    <h2 className="text-lg font-medium">Encounter timeline</h2>
                     <PatientHistoryTimeline entries={patient.history_entries} />
                 </section>
 
                 <section className="space-y-4 rounded-lg border p-4">
-                    <h2 className="text-lg font-medium">Add history entry</h2>
+                    <h2 className="text-lg font-medium">Add encounter entry</h2>
 
                     <form onSubmit={submitHistory} className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -146,13 +199,9 @@ export default function ShowPatient({ patient }: { patient: Patient }) {
                                 </Label>
                                 <Input
                                     id="visit_case_number"
-                                    value={historyForm.data.visit_case_number}
-                                    onChange={(event) =>
-                                        historyForm.setData(
-                                            'visit_case_number',
-                                            event.target.value,
-                                        )
-                                    }
+                                    value="Auto-generated on save"
+                                    readOnly
+                                    disabled
                                 />
                             </div>
 

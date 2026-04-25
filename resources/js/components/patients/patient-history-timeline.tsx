@@ -1,19 +1,4 @@
-type HistoryEntry = {
-    id: number;
-    entry_date: string;
-    visit_case_number?: string | null;
-    visit_at?: string | null;
-    clinic_location?: string | null;
-    visit_type?: string | null;
-    visit_status?: string | null;
-    appointment_id?: string | null;
-    entry_type: string | null;
-    title: string;
-    details: string;
-    creator?: {
-        name: string;
-    } | null;
-};
+import type { HistoryEntry } from '@/types/patient';
 
 export default function PatientHistoryTimeline({
     entries,

@@ -6,16 +6,22 @@ use App\Events\Patients\PatientHistoryEntryCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Patients\StorePatientHistoryEntryRequest;
 use App\Models\Patients\Patient;
+use App\Services\Patients\PatientHistoryService;
 use Illuminate\Http\RedirectResponse;
 
 class PatientHistoryController extends Controller
 {
+    public function __construct(
+        protected PatientHistoryService $patientHistoryService,
+    ) {}
+
     public function store(StorePatientHistoryEntryRequest $request, Patient $patient): RedirectResponse
     {
-        $entry = $patient->historyEntries()->create([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-        ]);
+        $entry = $this->patientHistoryService->create(
+            $patient,
+            $request->validated(),
+            $request->user()->id,
+        );
 
         event(new PatientHistoryEntryCreated($entry));
 

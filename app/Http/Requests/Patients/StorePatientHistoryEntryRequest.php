@@ -21,7 +21,7 @@ class StorePatientHistoryEntryRequest extends FormRequest
     {
         return [
             'entry_date' => ['required', 'date'],
-            'visit_case_number' => ['nullable', 'string', 'max:255'],
+            'visit_case_number' => ['prohibited'],
             'visit_at' => ['required', 'date'],
             'clinic_location' => ['required', 'string', 'max:255'],
             'veterinarian_user_id' => ['nullable', 'integer', 'exists:users,id'],

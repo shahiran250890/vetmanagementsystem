@@ -19,6 +19,7 @@ class PatientFactory extends Factory
     public function definition(): array
     {
         return [
+            'patient_type' => 'animal',
             'user_id' => User::factory(),
             'name' => fake()->firstName(),
             'species' => fake()->randomElement(['Canine', 'Feline']),

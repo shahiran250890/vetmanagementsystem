@@ -3,26 +3,13 @@ import { useState } from 'react';
 import PatientFilters from '@/components/patients/patient-filters';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
-
-type PatientListItem = {
-    id: number;
-    name: string;
-    species: string;
-    status: string;
-    user?: {
-        name: string;
-    } | null;
-};
-
-type PaginatedPatients = {
-    data: PatientListItem[];
-};
+import { create, index as patientsIndex, show } from '@/routes/patients';
+import type { BreadcrumbItem, PaginatedCollection, PatientRecord } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Patients',
-        href: '/patients',
+        href: patientsIndex(),
     },
 ];
 
@@ -30,7 +17,7 @@ export default function PatientsIndex({
     patients,
     filters,
 }: {
-    patients: PaginatedPatients;
+    patients: PaginatedCollection<PatientRecord>;
     filters: {
         search: string;
         status: string;
@@ -41,7 +28,7 @@ export default function PatientsIndex({
 
     const applyFilters = () => {
         router.get(
-            '/patients',
+            patientsIndex.url(),
             { search, status },
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -50,7 +37,7 @@ export default function PatientsIndex({
     const resetFilters = () => {
         setSearch('');
         setStatus('');
-        router.get('/patients', {}, { preserveState: true, replace: true });
+        router.get(patientsIndex.url(), {}, { preserveState: true, replace: true });
     };
 
     return (
@@ -60,7 +47,7 @@ export default function PatientsIndex({
                 <div className="flex items-center justify-between">
                     <h1 className="text-xl font-semibold">Patients</h1>
                     <Button asChild>
-                        <Link href="/patients/create">Add patient</Link>
+                        <Link href={create()}>Add patient</Link>
                     </Button>
                 </div>
 
@@ -78,9 +65,10 @@ export default function PatientsIndex({
                         <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-4 py-3">Name</th>
+                                <th className="px-4 py-3">Type</th>
                                 <th className="px-4 py-3">Species</th>
                                 <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Owner</th>
+                                <th className="px-4 py-3">Contact</th>
                                 <th className="px-4 py-3">Action</th>
                             </tr>
                         </thead>
@@ -88,7 +76,7 @@ export default function PatientsIndex({
                             {patients.data.length === 0 ? (
                                 <tr>
                                     <td
-                                        colSpan={5}
+                                        colSpan={6}
                                         className="px-4 py-8 text-center text-muted-foreground"
                                     >
                                         No patients found.
@@ -101,17 +89,22 @@ export default function PatientsIndex({
                                             {patient.name}
                                         </td>
                                         <td className="px-4 py-3">
+                                            {patient.patient_type}
+                                        </td>
+                                        <td className="px-4 py-3">
                                             {patient.species}
                                         </td>
                                         <td className="px-4 py-3">
                                             {patient.status}
                                         </td>
                                         <td className="px-4 py-3">
-                                            {patient.user?.name ?? '-'}
+                                            {patient.patient_type === 'animal'
+                                                ? patient.user?.name ?? '-'
+                                                : patient.human_profile?.primary_phone ?? '-'}
                                         </td>
                                         <td className="px-4 py-3">
                                             <Link
-                                                href={`/patients/${patient.id}`}
+                                                href={show(patient.id)}
                                                 className="text-sm underline"
                                             >
                                                 View

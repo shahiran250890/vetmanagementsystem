@@ -5,8 +5,15 @@ use App\Models\User;
 
 test('patient index supports search', function () {
     $user = User::factory()->create();
-    Patient::factory()->create(['name' => 'Shadow']);
-    Patient::factory()->create(['name' => 'Luna']);
+    Patient::factory()->create([
+        'patient_type' => 'animal',
+        'name' => 'Shadow',
+        'species' => 'Canine',
+    ]);
+    Patient::factory()->create([
+        'patient_type' => 'human',
+        'name' => 'Luna',
+    ]);
 
     $response = $this
         ->actingAs($user)
@@ -19,8 +26,16 @@ test('patient index supports search', function () {
 
 test('patient index supports status filter', function () {
     $user = User::factory()->create();
-    Patient::factory()->create(['name' => 'Alpha', 'status' => 'active']);
-    Patient::factory()->create(['name' => 'Bravo', 'status' => 'deceased']);
+    Patient::factory()->create([
+        'patient_type' => 'animal',
+        'name' => 'Alpha',
+        'status' => 'active',
+    ]);
+    Patient::factory()->create([
+        'patient_type' => 'human',
+        'name' => 'Bravo',
+        'status' => 'deceased',
+    ]);
 
     $response = $this
         ->actingAs($user)
@@ -29,4 +44,18 @@ test('patient index supports status filter', function () {
     $response->assertOk();
     $response->assertSee('Bravo');
     $response->assertDontSee('Alpha');
+});
+
+test('patient index includes both human and animal labels', function () {
+    $user = User::factory()->create();
+    Patient::factory()->create(['patient_type' => 'animal', 'name' => 'Animal Record']);
+    Patient::factory()->create(['patient_type' => 'human', 'name' => 'Human Record']);
+
+    $response = $this
+        ->actingAs($user)
+        ->get(route('patients.index'));
+
+    $response->assertOk();
+    $response->assertSee('animal');
+    $response->assertSee('human');
 });

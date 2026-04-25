@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
 
@@ -20,6 +21,7 @@ class Patient extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'patient_type',
         'user_id',
         'name',
         'species',
@@ -52,6 +54,16 @@ class Patient extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function humanProfile(): HasOne
+    {
+        return $this->hasOne(PatientHumanProfile::class);
+    }
+
+    public function animalProfile(): HasOne
+    {
+        return $this->hasOne(PatientAnimalProfile::class);
     }
 
     public function historyEntries(): HasMany
