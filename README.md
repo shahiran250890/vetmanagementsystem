@@ -211,3 +211,29 @@ Tenant matching uses `tenant_artisan_search_fields` in `config/multitenancy.php`
 ## Local URL
 
 With Laravel Herd, the app is typically available at `https://vetmanagementsystem.test`. Add domains (e.g. in `/etc/hosts` or Herd) and the `domain` table so each host resolves to the correct tenant.
+
+---
+
+## System modules documentation
+
+Detailed module and feature technical documentation for System Settings is available in:
+
+- `docs/system/README.md`
+- `docs/system/users/README.md`
+- `docs/system/roles/README.md`
+- `docs/system/permissions/README.md`
+- `docs/system/species/README.md`
+- `docs/system/system-settings/README.md`
+- `docs/system/organization/README.md`
+- `docs/system/features/README.md`
+
+### Latest System updates
+
+- Added detail/view pages for System modules:
+  - Users: `settings.system.users.show`
+  - Roles: `settings.system.roles.show`
+  - Permissions: `settings.system.permissions.show`
+  - Species: `settings.system.species.show`
+- Added `View` actions from list pages for Users, Roles, Permissions, and Species.
+- Enhanced Species create/edit to support dynamic multi-breed input in one form transaction.
+- Updated Species validation to be tenant-aware by using model-based validation rules for unique/exists checks.
