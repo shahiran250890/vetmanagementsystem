@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type {
+    AllowedPatientType,
     BloodTypeOption,
     OwnerOption,
     PatientFormData,
@@ -21,6 +22,7 @@ type PatientFormProps = {
     bloodTypes: BloodTypeOption[];
     speciesOptions: SpeciesOption[];
     submitLabel: string;
+    allowedPatientType: AllowedPatientType;
 };
 
 export default function PatientForm({
@@ -32,6 +34,7 @@ export default function PatientForm({
     bloodTypes,
     speciesOptions,
     submitLabel,
+    allowedPatientType,
 }: PatientFormProps) {
     const selectedSpecies = speciesOptions.find(
         (species) => species.name === data.animal_profile.species,
@@ -47,13 +50,19 @@ export default function PatientForm({
                         id="patient_type"
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                         value={data.patient_type}
+                        disabled={allowedPatientType !== null}
                         onChange={(event) =>
                             setData('patient_type', event.target.value as PatientType)
                         }
                     >
-                        <option value="animal">Animal</option>
-                        <option value="human">Human</option>
+                        {(allowedPatientType === null || allowedPatientType === 'animal') && <option value="animal">Animal</option>}
+                        {(allowedPatientType === null || allowedPatientType === 'human') && <option value="human">Human</option>}
                     </select>
+                    {allowedPatientType !== null && (
+                        <p className="text-xs text-muted-foreground">
+                            Patient type is locked by organization clinic type.
+                        </p>
+                    )}
                     <InputError message={errors.patient_type} />
                 </div>
 

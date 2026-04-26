@@ -1,5 +1,5 @@
 import { Form, Link, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import InputError from '@/components/input-error';
 import ListPagination from '@/components/system/list-pagination';
@@ -9,7 +9,22 @@ import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem, PaginatedCollection } from '@/types';
 
-type Species = { id: number; name: string; code: string; is_enabled: boolean; breeds_count: number };
+type BreedFormItem = {
+    id?: number;
+    name: string;
+    code: string;
+    is_enabled: boolean;
+};
+
+type Species = {
+    id: number;
+    name: string;
+    code: string;
+    is_enabled: boolean;
+    breeds_count: number;
+    breeds?: BreedFormItem[];
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'System Setting', href: '/settings/system' },
     { title: 'Species Management', href: '/settings/system/species' },
@@ -39,6 +54,17 @@ export default function SpeciesIndex({
     const [debouncedSearch, setDebouncedSearch] = useState(filters?.search ?? '');
     const [selectedDeleteSpecies, setSelectedDeleteSpecies] = useState<Species | null>(null);
     const [deletingSpeciesId, setDeletingSpeciesId] = useState<number | null>(null);
+    const [breedRows, setBreedRows] = useState<BreedFormItem[]>([]);
+
+    const initialBreedRows = useMemo(
+        () => (editingSpecies?.breeds ?? []).map((breed) => ({
+            id: breed.id,
+            name: breed.name ?? '',
+            code: breed.code ?? '',
+            is_enabled: breed.is_enabled ?? true,
+        })),
+        [editingSpecies?.breeds],
+    );
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -56,8 +82,30 @@ export default function SpeciesIndex({
         router.get('/settings/system/species', { search: debouncedSearch, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
     }, [debouncedSearch, filters?.search, isFormPage]);
 
+    useEffect(() => {
+        if (!isFormPage) {
+            return;
+        }
+
+        setBreedRows(initialBreedRows);
+    }, [initialBreedRows, isFormPage]);
+
     const goToPage = (page: number) => {
         router.get('/settings/system/species', { search: filters?.search ?? '', page }, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const addBreedRow = () => {
+        setBreedRows((currentRows) => [...currentRows, { name: '', code: '', is_enabled: true }]);
+    };
+
+    const removeBreedRow = (index: number) => {
+        setBreedRows((currentRows) => currentRows.filter((_, rowIndex) => rowIndex !== index));
+    };
+
+    const updateBreedRow = <K extends keyof BreedFormItem>(index: number, key: K, value: BreedFormItem[K]) => {
+        setBreedRows((currentRows) =>
+            currentRows.map((row, rowIndex) => (rowIndex === index ? { ...row, [key]: value } : row)),
+        );
     };
 
     const confirmDeleteSpecies = () => {
@@ -100,6 +148,57 @@ export default function SpeciesIndex({
                                 <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={editingSpecies?.name} /><InputError message={errors.name} /></div>
                                 <div className="grid gap-2"><Label htmlFor="code">Code</Label><Input id="code" name="code" defaultValue={editingSpecies?.code} /><InputError message={errors.code} /></div>
                                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_enabled" value="1" defaultChecked={editingSpecies?.is_enabled ?? true} /> Enabled</label>
+                                <div className="space-y-3 rounded border p-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-medium">Breed</h3>
+                                        <Button type="button" variant="outline" onClick={addBreedRow}>Add breed</Button>
+                                    </div>
+                                    {breedRows.length === 0 && (
+                                        <p className="text-sm text-muted-foreground">No breeds added yet.</p>
+                                    )}
+                                    {breedRows.map((breedRow, index) => (
+                                        <div key={`breed-row-${index}`} className="space-y-3 rounded border p-3">
+                                            <input type="hidden" name={`breeds[${index}][id]`} value={breedRow.id ?? ''} />
+                                            <div className="grid gap-2">
+                                                <Label htmlFor={`breed-name-${index}`}>Breed name</Label>
+                                                <Input
+                                                    id={`breed-name-${index}`}
+                                                    name={`breeds[${index}][name]`}
+                                                    value={breedRow.name}
+                                                    onChange={(event) => updateBreedRow(index, 'name', event.target.value)}
+                                                />
+                                                <InputError message={errors[`breeds.${index}.name`]} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor={`breed-code-${index}`}>Breed code</Label>
+                                                <Input
+                                                    id={`breed-code-${index}`}
+                                                    name={`breeds[${index}][code]`}
+                                                    value={breedRow.code}
+                                                    onChange={(event) => updateBreedRow(index, 'code', event.target.value)}
+                                                />
+                                                <InputError message={errors[`breeds.${index}.code`]} />
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <label className="flex items-center gap-2 text-sm">
+                                                    <input type="hidden" name={`breeds[${index}][is_enabled]`} value="0" />
+                                                    <input
+                                                        type="checkbox"
+                                                        name={`breeds[${index}][is_enabled]`}
+                                                        value="1"
+                                                        checked={breedRow.is_enabled}
+                                                        onChange={(event) => updateBreedRow(index, 'is_enabled', event.target.checked)}
+                                                    />
+                                                    Enabled
+                                                </label>
+                                                <Button type="button" variant="destructive" onClick={() => removeBreedRow(index)}>
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <InputError message={errors[`breeds.${index}.is_enabled`]} />
+                                        </div>
+                                    ))}
+                                </div>
                                 <div className="flex gap-2">
                                     <Button disabled={processing}>{isEdit ? 'Update' : 'Create'}</Button>
                                     <Button variant="outline" asChild>
@@ -142,6 +241,9 @@ export default function SpeciesIndex({
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
+                                                    <Button className="bg-sky-600 text-white hover:bg-sky-700" asChild>
+                                                        <Link href={`/settings/system/species/${item.id}`}>View</Link>
+                                                    </Button>
                                                     {canUpdateSpecies && <Button variant="outline" asChild><Link href={`/settings/system/species/${item.id}/edit`}>Edit</Link></Button>}
                                                     {canDeleteSpecies && (
                                                         <Button

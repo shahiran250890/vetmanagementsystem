@@ -2,6 +2,7 @@
 
 use App\Models\Patients\BloodType;
 use App\Models\Patients\Patient;
+use App\Models\Settings\OrganizationProfile;
 use App\Models\User;
 
 test('patients index requires authentication', function () {
@@ -113,4 +114,51 @@ test('human patient can be created', function () {
     expect($patient->humanProfile?->height_cm)->toBe('175.50');
     expect($patient->humanProfile?->weight_kg)->toBe('72.30');
     expect($patient->humanProfile?->blood_pressure)->toBe('120/80');
+});
+
+test('patient type follows organization clinic type for create and update', function () {
+    $user = User::factory()->create();
+    $owner = User::factory()->create();
+    OrganizationProfile::query()->create([
+        'clinic_type' => 'vet',
+        'organization_name' => 'Vet One',
+        'organization_phone' => '+60311112222',
+        'organization_email' => 'admin@vetone.test',
+        'organization_fax' => '+60311112223',
+        'organization_license' => 'VET-100',
+    ]);
+
+    $createResponse = $this
+        ->actingAs($user)
+        ->post(route('patients.store'), [
+            'patient_type' => 'human',
+            'name' => 'Bella',
+            'status' => 'active',
+            'animal_profile' => [
+                'owner_user_id' => $owner->id,
+                'species' => 'Canine',
+            ],
+        ]);
+
+    $createdPatient = Patient::query()->latest()->first();
+
+    $createResponse->assertRedirect(route('patients.show', $createdPatient));
+    expect($createdPatient?->patient_type)->toBe('animal');
+
+    $updateResponse = $this
+        ->actingAs($user)
+        ->put(route('patients.update', $createdPatient), [
+            'patient_type' => 'human',
+            'name' => 'Bella Updated',
+            'status' => 'active',
+            'animal_profile' => [
+                'owner_user_id' => $owner->id,
+                'species' => 'Canine',
+            ],
+        ]);
+
+    $updateResponse->assertRedirect(route('patients.show', $createdPatient));
+
+    $createdPatient?->refresh();
+    expect($createdPatient?->patient_type)->toBe('animal');
 });

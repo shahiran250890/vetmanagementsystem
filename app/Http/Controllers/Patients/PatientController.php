@@ -10,6 +10,7 @@ use App\Http\Requests\Patients\UpdatePatientRequest;
 use App\Http\Resources\Patients\PatientResource;
 use App\Models\Patients\BloodType;
 use App\Models\Patients\Patient;
+use App\Models\Settings\OrganizationProfile;
 use App\Models\Settings\Species;
 use App\Models\User;
 use App\Services\Patients\PatientRecordService;
@@ -46,6 +47,7 @@ class PatientController extends Controller
             'owners' => $this->ownerOptions(),
             'bloodTypes' => $this->bloodTypeOptions(),
             'speciesOptions' => $this->speciesOptions(),
+            'allowedPatientType' => $this->allowedPatientType(),
         ]);
     }
 
@@ -78,6 +80,7 @@ class PatientController extends Controller
             'owners' => $this->ownerOptions(),
             'bloodTypes' => $this->bloodTypeOptions(),
             'speciesOptions' => $this->speciesOptions(),
+            'allowedPatientType' => $this->allowedPatientType(),
         ]);
     }
 
@@ -175,5 +178,16 @@ class PatientController extends Controller
             ->all();
 
         return $species;
+    }
+
+    protected function allowedPatientType(): ?string
+    {
+        $clinicType = OrganizationProfile::query()->value('clinic_type');
+
+        return match ($clinicType) {
+            'human' => 'human',
+            'vet' => 'animal',
+            default => null,
+        };
     }
 }

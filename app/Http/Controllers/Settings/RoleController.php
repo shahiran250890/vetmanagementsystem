@@ -54,6 +54,16 @@ class RoleController extends Controller
         ]);
     }
 
+    public function show(Role $role): Response
+    {
+        $this->authorizeResourcePermission('view');
+
+        return Inertia::render('settings/system/roles/show', [
+            'role' => $role->load('permissions:id,name'),
+            ...$this->resourcePermissionProps(),
+        ]);
+    }
+
     public function store(RoleRequest $request): RedirectResponse
     {
         $role = Role::query()->create([

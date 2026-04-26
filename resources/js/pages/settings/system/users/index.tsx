@@ -226,6 +226,9 @@ export default function UsersIndex({ users, roles = [], managedUser, formMode, f
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <div className="flex gap-2">
+                                                        <Button className="bg-sky-600 text-white hover:bg-sky-700" asChild>
+                                                            <Link href={`/settings/system/users/${user.id}`}>View</Link>
+                                                        </Button>
                                                         {canUpdateUser && <Button variant="outline" asChild><Link href={`/settings/system/users/${user.id}/edit`}>Edit</Link></Button>}
                                                         {canDeleteUser && (
                                                             <Button

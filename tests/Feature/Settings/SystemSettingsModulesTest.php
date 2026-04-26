@@ -3,6 +3,7 @@
 test('guest is redirected from system settings modules', function () {
     $routes = [
         'settings.system.system-settings.index',
+        'settings.system.organization.edit',
         'settings.system.users.index',
         'settings.system.species.index',
         'settings.system.roles.index',

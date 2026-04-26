@@ -21,7 +21,7 @@ export const accountSettingsNav: NavItem[] = [
     },
 ];
 
-export const systemSettingsNav: NavItem[] = [
+export const systemSettingsNav = (organizationClinicType: 'vet' | 'human' | null = null): NavItem[] => [
     {
         title: 'Back',
         href: '/settings',
@@ -47,14 +47,21 @@ export const systemSettingsNav: NavItem[] = [
         href: '/settings/system/permissions',
         icon: null,
     },
-    {
-        title: 'Species',
-        href: '/settings/system/species',
-        icon: null,
-    },
+    ...(organizationClinicType === 'human'
+        ? []
+        : [{
+            title: 'Species',
+            href: '/settings/system/species',
+            icon: null,
+        }]),
     {
         title: 'System Settings',
         href: '/settings/system/system-settings',
+        icon: null,
+    },
+    {
+        title: 'Organization',
+        href: '/settings/system/organization',
         icon: null,
     },
 ];

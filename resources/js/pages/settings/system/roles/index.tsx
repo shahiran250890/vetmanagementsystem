@@ -129,6 +129,9 @@ export default function RolesIndex({ roles, permissions = [], editingRole, formM
                                             <td className="px-4 py-3 text-muted-foreground">{role.permissions.map((permission) => permission.name).join(', ') || 'No permissions'}</td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
+                                                    <Button className="bg-sky-600 text-white hover:bg-sky-700" asChild>
+                                                        <Link href={`/settings/system/roles/${role.id}`}>View</Link>
+                                                    </Button>
                                                     {canUpdateRole && <Button variant="outline" asChild><Link href={`/settings/system/roles/${role.id}/edit`}>Edit</Link></Button>}
                                                     {canDeleteRole && (
                                                         <Button

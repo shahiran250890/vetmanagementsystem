@@ -52,6 +52,16 @@ class UserManagementController extends Controller
         ]);
     }
 
+    public function show(User $managed_user): Response
+    {
+        $this->authorizeResourcePermission('view');
+
+        return Inertia::render('settings/system/users/show', [
+            'managedUser' => $managed_user->load('roles:id,name'),
+            ...$this->resourcePermissionProps(),
+        ]);
+    }
+
     public function store(UserManagementRequest $request): RedirectResponse
     {
         $user = User::query()->create([

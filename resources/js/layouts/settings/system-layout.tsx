@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import { systemSettingsNav } from '@/config/settings-nav';
 import AppLayout from '@/layouts/app-layout';
@@ -17,13 +17,17 @@ export default function SystemLayout({
     contentClassName = 'max-w-none',
     children,
 }: SystemLayoutProps) {
+    const {
+        organizationClinicType,
+    } = usePage().props as { organizationClinicType?: 'vet' | 'human' | null };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={pageTitle} />
             <SettingsLayout
                 title="System Setting"
                 description="Manage internal system modules."
-                navItems={systemSettingsNav}
+                navItems={systemSettingsNav(organizationClinicType ?? null)}
                 contentClassName={contentClassName}
             >
                 {children}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Settings\OrganizationProfile;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,20 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'organizationClinicType' => $this->organizationClinicType(),
         ];
+    }
+
+    protected function organizationClinicType(): ?string
+    {
+        try {
+            $clinicType = OrganizationProfile::query()->value('clinic_type');
+
+            return in_array($clinicType, ['vet', 'human'], true)
+                ? $clinicType
+                : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

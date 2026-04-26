@@ -1,6 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
-import { KeyRound, ShieldCheck, SlidersHorizontal, UserCog, UsersRound } from 'lucide-react';
+import { Building2, KeyRound, ShieldCheck, SlidersHorizontal, UserCog, UsersRound } from 'lucide-react';
 import SystemLayout from '@/layouts/settings/system-layout';
 import type { BreadcrumbItem } from '@/types';
 
@@ -12,9 +12,17 @@ const systemLinks = [
     { title: 'Permission Management', href: '/settings/system/permissions', description: 'Manage available permission keys.', icon: ShieldCheck },
     { title: 'Species Management', href: '/settings/system/species', description: 'Manage available patient species.', icon: KeyRound },
     { title: 'System Settings', href: '/settings/system/system-settings', description: 'Manage key-value system settings.', icon: SlidersHorizontal },
+    { title: 'Organization Profile', href: '/settings/system/organization', description: 'Manage organization and clinic details.', icon: Building2 },
 ] as const satisfies Array<{ title: string; href: string; description: string; icon: LucideIcon }>;
 
 export default function SystemSettingIndex() {
+    const {
+        organizationClinicType,
+    } = usePage().props as { organizationClinicType?: 'vet' | 'human' | null };
+    const filteredSystemLinks = organizationClinicType === 'human'
+        ? systemLinks.filter((item) => item.href !== '/settings/system/species')
+        : systemLinks;
+
     return (
         <SystemLayout pageTitle="System Setting" breadcrumbs={breadcrumbs}>
                 <div className="space-y-4">
@@ -23,7 +31,7 @@ export default function SystemSettingIndex() {
                         <p className="text-sm text-muted-foreground">Choose a management module.</p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                        {systemLinks.map((item) => (
+                        {filteredSystemLinks.map((item) => (
                             <Link key={item.href} href={item.href} className="group rounded-lg border p-4 transition hover:border-primary/40 hover:bg-muted/40">
                                 <div className="mb-3 flex items-center gap-2">
                                     <item.icon className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />

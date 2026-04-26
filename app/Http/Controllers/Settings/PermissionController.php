@@ -51,6 +51,16 @@ class PermissionController extends Controller
         ]);
     }
 
+    public function show(Permission $permission): Response
+    {
+        $this->authorizeResourcePermission('view');
+
+        return Inertia::render('settings/system/permissions/show', [
+            'permission' => $permission->load('roles:id,name'),
+            ...$this->resourcePermissionProps(),
+        ]);
+    }
+
     public function store(PermissionRequest $request): RedirectResponse
     {
         Permission::query()->create([

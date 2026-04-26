@@ -5,6 +5,7 @@ import { edit, index, show, update } from '@/routes/patients';
 import type { FormEvent } from 'react';
 import type { BreadcrumbItem } from '@/types';
 import type {
+    AllowedPatientType,
     BloodTypeOption,
     OwnerOption,
     PatientFormData,
@@ -17,11 +18,13 @@ export default function EditPatient({
     owners,
     bloodTypes,
     speciesOptions,
+    allowedPatientType,
 }: {
     patient: PatientRecord;
     owners: OwnerOption[];
     bloodTypes: BloodTypeOption[];
     speciesOptions: SpeciesOption[];
+    allowedPatientType: AllowedPatientType;
 }) {
     const normalizedSex = (() => {
         if (patient.sex === 'Male' || patient.sex === 'male') {
@@ -46,7 +49,7 @@ export default function EditPatient({
     ];
 
     const { data, setData, put, processing, errors } = useForm<PatientFormData>({
-        patient_type: patient.patient_type,
+        patient_type: allowedPatientType ?? patient.patient_type,
         name: patient.name,
         sex: normalizedSex,
         date_of_birth: patient.date_of_birth ?? '',
@@ -173,6 +176,7 @@ export default function EditPatient({
                         bloodTypes={bloodTypes}
                         speciesOptions={speciesOptions}
                         submitLabel="Update patient"
+                        allowedPatientType={allowedPatientType}
                     />
                 </form>
             </div>

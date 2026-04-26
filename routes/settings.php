@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\OrganizationProfileController;
 use App\Http\Controllers\Settings\PermissionController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\RoleController;
@@ -34,13 +35,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('system-settings', SystemSettingController::class)
             ->except(['show']);
         Route::resource('users', UserManagementController::class)
-            ->except(['show'])
             ->parameters(['users' => 'managed_user']);
-        Route::resource('species', SpeciesController::class)
-            ->except(['show']);
-        Route::resource('roles', RoleController::class)
-            ->except(['show']);
-        Route::resource('permissions', PermissionController::class)
-            ->except(['show']);
+        Route::resource('species', SpeciesController::class);
+        Route::resource('roles', RoleController::class);
+        Route::resource('permissions', PermissionController::class);
+        Route::get('organization', [OrganizationProfileController::class, 'edit'])
+            ->name('organization.edit');
+        Route::put('organization', [OrganizationProfileController::class, 'update'])
+            ->name('organization.update');
     });
 });

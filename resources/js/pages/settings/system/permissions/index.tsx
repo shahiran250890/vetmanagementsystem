@@ -128,6 +128,9 @@ export default function PermissionsIndex({ permissions, editingPermission, formM
                                             <td className="px-4 py-3 font-medium">{permission.name}</td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
+                                                    <Button className="bg-sky-600 text-white hover:bg-sky-700" asChild>
+                                                        <Link href={`/settings/system/permissions/${permission.id}`}>View</Link>
+                                                    </Button>
                                                     {canUpdatePermission && (
                                                         <Button variant="outline" asChild>
                                                             <Link href={`/settings/system/permissions/${permission.id}/edit`}>Edit</Link>

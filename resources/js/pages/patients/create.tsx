@@ -5,6 +5,7 @@ import { create, index, store } from '@/routes/patients';
 import type { FormEvent } from 'react';
 import type { BreadcrumbItem } from '@/types';
 import type {
+    AllowedPatientType,
     BloodTypeOption,
     OwnerOption,
     PatientFormData,
@@ -20,13 +21,15 @@ export default function CreatePatient({
     owners,
     bloodTypes,
     speciesOptions,
+    allowedPatientType,
 }: {
     owners: OwnerOption[];
     bloodTypes: BloodTypeOption[];
     speciesOptions: SpeciesOption[];
+    allowedPatientType: AllowedPatientType;
 }) {
     const { data, setData, post, processing, errors } = useForm<PatientFormData>({
-        patient_type: 'animal',
+        patient_type: allowedPatientType ?? 'animal',
         name: '',
         sex: '',
         date_of_birth: '',
@@ -138,6 +141,7 @@ export default function CreatePatient({
                         bloodTypes={bloodTypes}
                         speciesOptions={speciesOptions}
                         submitLabel="Create patient"
+                        allowedPatientType={allowedPatientType}
                     />
                 </form>
             </div>

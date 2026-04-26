@@ -1,4 +1,5 @@
 export type PatientType = 'human' | 'animal';
+export type AllowedPatientType = PatientType | null;
 
 export type PatientStatus = 'active' | 'deceased' | 'transferred';
 

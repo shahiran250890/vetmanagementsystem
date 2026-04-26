@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Patients;
 
+use App\Models\Settings\OrganizationProfile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
@@ -18,6 +19,12 @@ class UpdatePatientRequest extends FormRequest
     {
         $payload = $this->all();
         $patientType = $this->input('patient_type');
+        $allowedPatientType = $this->allowedPatientType();
+
+        if ($allowedPatientType !== null) {
+            $patientType = $allowedPatientType;
+            $payload['patient_type'] = $allowedPatientType;
+        }
 
         if ($patientType === 'human') {
             unset($payload['animal_profile']);
@@ -39,9 +46,10 @@ class UpdatePatientRequest extends FormRequest
     {
         $patient = $this->route('patient');
         $animalProfileId = $patient?->animalProfile?->id;
+        $allowedTypes = $this->allowedPatientTypes();
 
         return array_merge([
-            'patient_type' => ['required', Rule::in(['human', 'animal'])],
+            'patient_type' => ['required', Rule::in($allowedTypes)],
             'name' => ['required', 'string', 'max:255'],
             'sex' => ['nullable', Rule::in(['1', '2'])],
             'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
@@ -111,10 +119,34 @@ class UpdatePatientRequest extends FormRequest
     {
         return [
             'patient_type.required' => 'Please choose whether this is a human or animal patient.',
+            'patient_type.in' => 'Patient type must match your organization clinic type.',
             'name.required' => 'Please provide the patient name.',
             'animal_profile.species.required' => 'Please provide the species for animal patients.',
             'status.required' => 'Please choose a patient status.',
             'status.in' => 'Patient status must be active, deceased, or transferred.',
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function allowedPatientTypes(): array
+    {
+        $allowedPatientType = $this->allowedPatientType();
+
+        return $allowedPatientType === null
+            ? ['human', 'animal']
+            : [$allowedPatientType];
+    }
+
+    protected function allowedPatientType(): ?string
+    {
+        $clinicType = OrganizationProfile::query()->value('clinic_type');
+
+        return match ($clinicType) {
+            'human' => 'human',
+            'vet' => 'animal',
+            default => null,
+        };
     }
 }
