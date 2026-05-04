@@ -56,7 +56,6 @@ test('patient can be updated', function () {
     $patient = Patient::factory()->create([
         'patient_type' => 'animal',
         'name' => 'Old Name',
-        'species' => 'Canine',
         'status' => 'active',
     ]);
 
@@ -76,7 +75,6 @@ test('patient can be updated', function () {
     $patient->refresh();
 
     expect($patient->name)->toBe('New Name');
-    expect($patient->species)->toBe('Feline');
     expect($patient->status)->toBe('transferred');
     expect($patient->animalProfile?->species)->toBe('Feline');
 });

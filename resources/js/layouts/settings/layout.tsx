@@ -1,9 +1,9 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
-import { defaultSettingsNav } from '@/config/settings-nav';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { defaultSettingsNav } from '@/config/settings-nav';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import type { NavItem } from '@/types';
@@ -24,13 +24,8 @@ export default function SettingsLayout({
 }: SettingsLayoutProps) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
     return (
-        <div className="px-4 py-6">
+        <div className="w-full min-w-0">
             <Heading
                 title={title}
                 description={description}

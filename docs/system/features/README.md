@@ -60,3 +60,11 @@ System list pages use a highlighted View button style:
 - `className="bg-sky-600 text-white hover:bg-sky-700"`
 
 Applied in users, roles, permissions, and species listings.
+
+## 7) Clinical UI vs System Settings
+
+Dashboard and clinical areas (patients, appointments, medical records, billing) use `resources/js/config/main-nav.ts` with role-based visibility. Those pages load data primarily through the authenticated **`/api/v1`** JSON API (see `routes/api_v1.php` and `docs/architecture.md`). System Settings continues to use classic Inertia full-page props from `App\Modules\Settings\Http\Controllers\*`.
+
+## 8) Shared frontend utilities
+
+Cross-cutting UI includes toast handling (`resources/js/contexts/toast-context.tsx`, `api-toast-bridge`), list filters, data tables, and loading indicators used by both clinical and settings flows where applicable.

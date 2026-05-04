@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
         $superAdminRole = Role::findOrCreate('superadmin', 'web');
         $adminRole = Role::findOrCreate('admin', 'web');
         $doctorRole = Role::findOrCreate('doctor', 'web');
+        $receptionistRole = Role::findOrCreate('receptionist', 'web');
         $nurseRole = Role::findOrCreate('nurse', 'web');
         $pharmaciesRole = Role::findOrCreate('pharmacies', 'web');
         $normalUserRole = Role::findOrCreate('normal user', 'web');
@@ -46,6 +47,15 @@ class UserSeeder extends Seeder
             'is_enabled' => true,
             'password' => Hash::make('password'),
         ])->syncRoles([$doctorRole]);
+
+        User::query()->updateOrCreate([
+            'email' => 'receptionist@example.com',
+        ], [
+            'name' => 'Receptionist User',
+            'phone' => '01234567891',
+            'is_enabled' => true,
+            'password' => Hash::make('password'),
+        ])->syncRoles([$receptionistRole]);
 
         User::query()->updateOrCreate([
             'email' => 'nurse@example.com',

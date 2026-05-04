@@ -7,6 +7,7 @@ use Database\Factories\Patients\PatientHistoryEntryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
 
 class PatientHistoryEntry extends Model
@@ -19,19 +20,12 @@ class PatientHistoryEntry extends Model
      */
     protected $fillable = [
         'patient_id',
+        'reference_type',
+        'reference_id',
+        'action',
+        'description',
+        'metadata',
         'created_by',
-        'visit_case_number',
-        'entry_date',
-        'visit_at',
-        'clinic_location',
-        'veterinarian_user_id',
-        'assistant_user_id',
-        'visit_type',
-        'appointment_id',
-        'visit_status',
-        'entry_type',
-        'title',
-        'details',
     ];
 
     /**
@@ -40,8 +34,7 @@ class PatientHistoryEntry extends Model
     protected function casts(): array
     {
         return [
-            'entry_date' => 'date',
-            'visit_at' => 'datetime',
+            'metadata' => 'array',
         ];
     }
 
@@ -55,13 +48,8 @@ class PatientHistoryEntry extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function veterinarian(): BelongsTo
+    public function reference(): MorphTo
     {
-        return $this->belongsTo(User::class, 'veterinarian_user_id');
-    }
-
-    public function assistant(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'assistant_user_id');
+        return $this->morphTo();
     }
 }

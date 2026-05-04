@@ -8,7 +8,6 @@ test('patient index supports search', function () {
     Patient::factory()->create([
         'patient_type' => 'animal',
         'name' => 'Shadow',
-        'species' => 'Canine',
     ]);
     Patient::factory()->create([
         'patient_type' => 'human',

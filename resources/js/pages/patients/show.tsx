@@ -1,17 +1,24 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import type { SubmitEventHandler } from 'react';
+
+import {
+    formPageSurfaceClassName,
+    nativeSelectClassName,
+    nativeTextareaClassName,
+} from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import PatientHistoryTimeline from '@/components/patients/patient-history-timeline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
-import { store as storeHistory } from '@/routes/patients/history';
+import { cn } from '@/lib/utils';
 import {
     edit as editPatient,
     index as patientsIndex,
     show as showPatient,
 } from '@/routes/patients';
+import { store as storeHistory } from '@/routes/patients/history';
 import type { BreadcrumbItem, PatientRecord } from '@/types';
 
 export default function ShowPatient({ patient }: { patient: PatientRecord }) {
@@ -37,7 +44,7 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
         details: '',
     });
 
-    const submitHistory = (event: FormEvent<HTMLFormElement>) => {
+    const submitHistory: SubmitEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
         historyForm.post(storeHistory.url(patient.id), {
             preserveScroll: true,
@@ -48,7 +55,7 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={patient.name} />
-            <div className="space-y-4 p-4">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-xl font-semibold">{patient.name}</h1>
                     <div className="flex gap-2">
@@ -188,8 +195,10 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
                     <PatientHistoryTimeline entries={patient.history_entries} />
                 </section>
 
-                <section className="space-y-4 rounded-lg border p-4">
-                    <h2 className="text-lg font-medium">Add encounter entry</h2>
+                <section className={cn(formPageSurfaceClassName, 'space-y-4')}>
+                    <h2 className="text-lg font-semibold text-foreground">
+                        Add encounter entry
+                    </h2>
 
                     <form onSubmit={submitHistory} className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -298,7 +307,7 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
                                 <Label htmlFor="visit_type">Visit Type</Label>
                                 <select
                                     id="visit_type"
-                                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                    className={nativeSelectClassName}
                                     value={historyForm.data.visit_type}
                                     onChange={(event) =>
                                         historyForm.setData(
@@ -325,7 +334,7 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
                                 <Label htmlFor="visit_status">Status</Label>
                                 <select
                                     id="visit_status"
-                                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                    className={nativeSelectClassName}
                                     value={historyForm.data.visit_status}
                                     onChange={(event) =>
                                         historyForm.setData(
@@ -391,7 +400,7 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
                             <Label htmlFor="details">Details</Label>
                             <textarea
                                 id="details"
-                                className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                className={nativeTextareaClassName}
                                 value={historyForm.data.details}
                                 onChange={(event) =>
                                     historyForm.setData('details', event.target.value)

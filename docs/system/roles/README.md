@@ -24,7 +24,7 @@ Prefix: `/settings/system/roles`
 
 ## Backend
 
-- Controller: `App\Http\Controllers\Settings\RoleController`
+- Controller: `App\Modules\Settings\Http\Controllers\RoleController`
   - Uses `HasResourcePermission` with resource name `role`.
   - `show()` loads role with permissions.
   - `destroy()` blocks:

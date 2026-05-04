@@ -1,8 +1,9 @@
 import { Transition } from '@headlessui/react';
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useRef, useState } from 'react';
-import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
+import SecurityController from '@/actions/App/Modules/Settings/Http/Controllers/SecurityController';
+import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -11,8 +12,8 @@ import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import AccountSettingsLayout from '@/layouts/settings/account-settings-layout';
+import { cn } from '@/lib/utils';
 import { edit } from '@/routes/security';
 import { disable, enable } from '@/routes/two-factor';
 import type { BreadcrumbItem } from '@/types';
@@ -51,12 +52,7 @@ export default function Security({
     const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Security settings" />
-
-            <h1 className="sr-only">Security settings</h1>
-
-            <SettingsLayout>
+        <AccountSettingsLayout breadcrumbs={breadcrumbs} headTitle="Security settings">
                 <div className="space-y-6">
                     <Heading
                         variant="small"
@@ -65,7 +61,8 @@ export default function Security({
                     />
 
                     <Form
-                        {...SecurityController.update.form()}
+                        action={SecurityController.update.url()}
+                        method="put"
                         options={{
                             preserveScroll: true,
                         }}
@@ -84,7 +81,7 @@ export default function Security({
                                 currentPasswordInput.current?.focus();
                             }
                         }}
-                        className="space-y-6"
+                        className={cn(formPageSurfaceClassName, 'space-y-6')}
                     >
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
@@ -157,7 +154,7 @@ export default function Security({
                                         leave="transition ease-in-out"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-neutral-600">
+                                        <p className="text-muted-foreground text-sm">
                                             Saved
                                         </p>
                                     </Transition>
@@ -184,7 +181,7 @@ export default function Security({
                                 </p>
 
                                 <div className="relative inline">
-                                    <Form {...disable.form()}>
+                                    <Form action={disable.url()} method="delete">
                                         {({ processing }) => (
                                             <Button
                                                 variant="destructive"
@@ -224,7 +221,8 @@ export default function Security({
                                         </Button>
                                     ) : (
                                         <Form
-                                            {...enable.form()}
+                                            action={enable.url()}
+                                            method="post"
                                             onSuccess={() =>
                                                 setShowSetupModal(true)
                                             }
@@ -256,7 +254,6 @@ export default function Security({
                         />
                     </div>
                 )}
-            </SettingsLayout>
-        </AppLayout>
+        </AccountSettingsLayout>
     );
 }

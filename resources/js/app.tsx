@@ -2,7 +2,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ApiToastBridge } from '@/components/api-toast-bridge';
+import { ToastViewport } from '@/components/toast-viewport';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ToastProvider } from '@/contexts/toast-context';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
 
@@ -21,7 +24,11 @@ createInertiaApp({
         root.render(
             <StrictMode>
                 <TooltipProvider delayDuration={0}>
-                    <App {...props} />
+                    <ToastProvider>
+                        <ApiToastBridge />
+                        <ToastViewport />
+                        <App {...props} />
+                    </ToastProvider>
                 </TooltipProvider>
             </StrictMode>,
         );

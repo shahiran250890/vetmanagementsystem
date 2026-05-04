@@ -9,12 +9,24 @@ import path from 'path';
 const phpBinary = process.env.PHP_BINARY || 'php';
 
 export default defineConfig({
+    /*
+     * Herd/Valet TLS auto-detection can make the dev server HTTPS on *.test while you
+     * browse the site over HTTP — scripts then fail to load. IPv6 [::1] in public/hot is
+     * also unreliable from some browsers. Use plain HTTP on 127.0.0.1.
+     */
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: '127.0.0.1',
+        },
+    },
+
     plugins: [
         laravel({
-            input: [
-                'resources/css/app.css',
-                'resources/js/app.tsx',
-            ],
+            detectTls: false,
+            input: ['resources/css/app.css', 'resources/js/app.tsx'],
             ssr: 'resources/js/ssr.tsx',
             refresh: true,
         }),

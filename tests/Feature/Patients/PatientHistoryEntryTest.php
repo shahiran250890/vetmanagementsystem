@@ -30,12 +30,12 @@ test('history entry can be created for a patient', function () {
     $this->assertDatabaseHas('patient_history_entries', [
         'patient_id' => $patient->id,
         'created_by' => $user->id,
-        'visit_status' => 'completed',
-        'title' => 'Initial consultation',
+        'action' => 'manual.visit_log',
+        'description' => 'Initial consultation',
     ]);
 
     expect($entry)->not->toBeNull();
-    expect($entry?->visit_case_number)->toStartWith("CASE-{$patient->id}-");
+    expect($entry?->metadata['visit_status'] ?? null)->toBe('completed');
 });
 
 test('history entry requires required fields', function () {

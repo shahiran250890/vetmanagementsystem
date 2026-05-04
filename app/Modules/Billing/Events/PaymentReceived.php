@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Modules\Billing\Events;
+
+use App\Models\Billing\Payment;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class PaymentReceived
+{
+    use Dispatchable, SerializesModels;
+
+    public function __construct(
+        public Payment $payment,
+    ) {}
+}

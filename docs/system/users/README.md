@@ -26,7 +26,7 @@ Prefix: `/settings/system/users`
 
 ## Backend
 
-- Controller: `App\Http\Controllers\Settings\UserManagementController`
+- Controller: `App\Modules\Settings\Http\Controllers\UserManagementController`
   - Uses `HasResourcePermission` with resource name `user`.
   - `show()` loads user with roles and renders detail page.
   - `manageableUsers()` excludes superadmin account id `1` and current authenticated user.

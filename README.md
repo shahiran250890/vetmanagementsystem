@@ -2,9 +2,11 @@
 
 Laravel application with multi-tenant support. Each tenant has its own database. Tenants are identified by domain (one tenant can have many domains).
 
+Clinical features (appointments, medical records, billing, patient vitals) and patient audit history are implemented as **domain modules** under `app/Modules/`, with a **JSON API** (`routes/api_v1.php`) backing the Inertia/React clinical pages. See `docs/architecture.md` for structure and `docs/database-tenant-schema.md` for tenant table layouts.
+
 ## Requirements
 
-- PHP 8.4+
+- PHP 8.2+ (see `composer.json` → `require.php`)
 - Composer
 - Node.js & npm
 - MySQL 8+
@@ -214,11 +216,16 @@ With Laravel Herd, the app is typically available at `https://vetmanagementsyste
 
 ---
 
-## System modules documentation
+## Documentation
 
-Detailed module and feature technical documentation for System Settings is available in:
+| Document | Contents |
+|----------|----------|
+| `docs/architecture.md` | Module layout, routing, API v1, patient audit log, clinical model overview. |
+| `docs/database-tenant-schema.md` | Tenant database tables and columns (migrations in `database/migrations/tenant/`). |
+| `docs/system/README.md` | System Settings technical index (links to per-module docs below). |
 
-- `docs/system/README.md`
+### System Settings module docs
+
 - `docs/system/users/README.md`
 - `docs/system/roles/README.md`
 - `docs/system/permissions/README.md`
@@ -227,13 +234,10 @@ Detailed module and feature technical documentation for System Settings is avail
 - `docs/system/organization/README.md`
 - `docs/system/features/README.md`
 
-### Latest System updates
+### Recent product and engineering updates
 
-- Added detail/view pages for System modules:
-  - Users: `settings.system.users.show`
-  - Roles: `settings.system.roles.show`
-  - Permissions: `settings.system.permissions.show`
-  - Species: `settings.system.species.show`
-- Added `View` actions from list pages for Users, Roles, Permissions, and Species.
-- Enhanced Species create/edit to support dynamic multi-breed input in one form transaction.
-- Updated Species validation to be tenant-aware by using model-based validation rules for unique/exists checks.
+- **Modular backend:** Domain code for Patients, Appointments, Medical, Billing, and Settings lives under `app/Modules/{Name}/` (services, repositories, HTTP layer, policies, events/listeners).
+- **Clinical API:** Authenticated `api/v1` routes expose CRUD-style resources for patients, appointments, medical records, bills, and payments; `routes/clinical.php` registers Inertia entry points for SPA-style pages that call this API.
+- **Tenant schema:** New tables for appointments, medical records, prescriptions, bills, bill items, payments, and patient vitals; `patient_history_entries` converted to an audit log (`action`, `metadata`, optional morph `reference`); patient `species` / `latest_weight_kg` columns removed from `patients` in favor of `patient_animal_profiles` and vitals (see migrations dated `2026_05_04_*`).
+- **System Settings:** Controllers are namespaced under `App\Modules\Settings\Http\Controllers\` (form requests remain in `app/Http/Requests/Settings/`).
+- **System UI:** Detail (`show`) pages and View actions for Users, Roles, Permissions, and Species; Species create/edit supports dynamic multi-breed rows with tenant-aware validation.

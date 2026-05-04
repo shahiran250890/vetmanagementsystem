@@ -1,12 +1,21 @@
 import { Form, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import {
+    formPageInsetSectionClassName,
+    formPageSurfaceClassName,
+} from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
+import { ListPageFilterActions } from '@/components/list-page-filter-actions';
+import { ListPageFilters } from '@/components/list-page-filters';
 import ListPagination from '@/components/system/list-pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
+import { cn } from '@/lib/utils';
+import { index as systemHome } from '@/routes/settings/system';
+import speciesRoutes from '@/routes/settings/system/species';
 import type { BreadcrumbItem, PaginatedCollection } from '@/types';
 
 type BreedFormItem = {
@@ -26,8 +35,8 @@ type Species = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'System Setting', href: '/settings/system' },
-    { title: 'Species Management', href: '/settings/system/species' },
+    { title: 'System Setting', href: systemHome() },
+    { title: 'Species Management', href: speciesRoutes.index() },
 ];
 
 export default function SpeciesIndex({
@@ -49,9 +58,8 @@ export default function SpeciesIndex({
 }) {
     const isEdit = formMode === 'edit' && editingSpecies;
     const isFormPage = formMode === 'create' || formMode === 'edit';
-    const action = isEdit ? `/settings/system/species/${editingSpecies.id}` : '/settings/system/species';
+    const action = isEdit ? speciesRoutes.update.url(editingSpecies.id) : speciesRoutes.store.url();
     const [search, setSearch] = useState(filters?.search ?? '');
-    const [debouncedSearch, setDebouncedSearch] = useState(filters?.search ?? '');
     const [selectedDeleteSpecies, setSelectedDeleteSpecies] = useState<Species | null>(null);
     const [deletingSpeciesId, setDeletingSpeciesId] = useState<number | null>(null);
     const [breedRows, setBreedRows] = useState<BreedFormItem[]>([]);
@@ -67,31 +75,42 @@ export default function SpeciesIndex({
     );
 
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            setDebouncedSearch(search);
-        }, 300);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync applied server filters into local draft after Inertia navigation
+        setSearch(filters?.search ?? '');
+    }, [filters?.search]);
 
-        return () => clearTimeout(timeout);
-    }, [search]);
+    const applyFilters = () => {
+        router.get(
+            speciesRoutes.index.url({ query: { search, page: 1 } }),
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
-    useEffect(() => {
-        if (isFormPage || debouncedSearch === (filters?.search ?? '')) {
-            return;
-        }
-
-        router.get('/settings/system/species', { search: debouncedSearch, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
-    }, [debouncedSearch, filters?.search, isFormPage]);
+    const resetFilters = () => {
+        setSearch('');
+        router.get(
+            speciesRoutes.index.url(),
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
     useEffect(() => {
         if (!isFormPage) {
             return;
         }
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate breed editor rows when editing species changes
         setBreedRows(initialBreedRows);
     }, [initialBreedRows, isFormPage]);
 
     const goToPage = (page: number) => {
-        router.get('/settings/system/species', { search: filters?.search ?? '', page }, { preserveState: true, preserveScroll: true, replace: true });
+        router.get(
+            speciesRoutes.index.url({ query: { search: filters?.search ?? '', page } }),
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
     };
 
     const addBreedRow = () => {
@@ -114,7 +133,7 @@ export default function SpeciesIndex({
         }
 
         setDeletingSpeciesId(selectedDeleteSpecies.id);
-        router.delete(`/settings/system/species/${selectedDeleteSpecies.id}`, {
+        router.delete(speciesRoutes.destroy.url(selectedDeleteSpecies.id), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
@@ -130,25 +149,48 @@ export default function SpeciesIndex({
         <SystemLayout pageTitle="System Setting - Species Management" breadcrumbs={breadcrumbs}>
             <div className="space-y-4">
                 {!isFormPage && (
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-1 items-center gap-2">
-                            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search species name" />
+                    <ListPageFilters>
+                        <div className="grid w-full gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                            <div className="grid min-w-0 gap-2">
+                                <Label htmlFor="species-search">Search</Label>
+                                <Input
+                                    id="species-search"
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                    placeholder="Search species name"
+                                />
+                            </div>
+                            <div className="flex flex-wrap items-end gap-2">
+                                <ListPageFilterActions
+                                    onApply={applyFilters}
+                                    onReset={resetFilters}
+                                />
+                                {canCreateSpecies && (
+                                    <Button asChild className="shrink-0">
+                                        <Link href={speciesRoutes.create.url()}>Add species</Link>
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                        {canCreateSpecies && (
-                            <Button asChild>
-                                <Link href="/settings/system/species/create">Add species</Link>
-                            </Button>
-                        )}
-                    </div>
+                    </ListPageFilters>
                 )}
                 {isFormPage && (canCreateSpecies || canUpdateSpecies) && (
-                    <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
+                    <Form
+                        action={action}
+                        method={isEdit ? 'put' : 'post'}
+                        className={cn(formPageSurfaceClassName, 'space-y-4')}
+                    >
                         {({ errors, processing }) => (
                             <>
                                 <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={editingSpecies?.name} /><InputError message={errors.name} /></div>
                                 <div className="grid gap-2"><Label htmlFor="code">Code</Label><Input id="code" name="code" defaultValue={editingSpecies?.code} /><InputError message={errors.code} /></div>
                                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_enabled" value="1" defaultChecked={editingSpecies?.is_enabled ?? true} /> Enabled</label>
-                                <div className="space-y-3 rounded border p-3">
+                                <div
+                                    className={cn(
+                                        formPageInsetSectionClassName,
+                                        'space-y-3',
+                                    )}
+                                >
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-sm font-medium">Breed</h3>
                                         <Button type="button" variant="outline" onClick={addBreedRow}>Add breed</Button>
@@ -157,7 +199,13 @@ export default function SpeciesIndex({
                                         <p className="text-sm text-muted-foreground">No breeds added yet.</p>
                                     )}
                                     {breedRows.map((breedRow, index) => (
-                                        <div key={`breed-row-${index}`} className="space-y-3 rounded border p-3">
+                                        <div
+                                            key={`breed-row-${index}`}
+                                            className={cn(
+                                                formPageInsetSectionClassName,
+                                                'space-y-3',
+                                            )}
+                                        >
                                             <input type="hidden" name={`breeds[${index}][id]`} value={breedRow.id ?? ''} />
                                             <div className="grid gap-2">
                                                 <Label htmlFor={`breed-name-${index}`}>Breed name</Label>
@@ -202,7 +250,7 @@ export default function SpeciesIndex({
                                 <div className="flex gap-2">
                                     <Button disabled={processing}>{isEdit ? 'Update' : 'Create'}</Button>
                                     <Button variant="outline" asChild>
-                                        <Link href="/settings/system/species">Back</Link>
+                                        <Link href={speciesRoutes.index.url()}>Back</Link>
                                     </Button>
                                 </div>
                             </>
@@ -242,9 +290,13 @@ export default function SpeciesIndex({
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
                                                     <Button className="bg-sky-600 text-white hover:bg-sky-700" asChild>
-                                                        <Link href={`/settings/system/species/${item.id}`}>View</Link>
+                                                        <Link href={speciesRoutes.show.url(item.id)}>View</Link>
                                                     </Button>
-                                                    {canUpdateSpecies && <Button variant="outline" asChild><Link href={`/settings/system/species/${item.id}/edit`}>Edit</Link></Button>}
+                                                    {canUpdateSpecies && (
+                                                        <Button variant="outline" asChild>
+                                                            <Link href={speciesRoutes.edit.url(item.id)}>Edit</Link>
+                                                        </Button>
+                                                    )}
                                                     {canDeleteSpecies && (
                                                         <Button
                                                             type="button"

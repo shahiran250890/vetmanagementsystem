@@ -17,7 +17,7 @@ Prefix: `/settings/system/organization`
 
 ## Backend
 
-- Controller: `App\Http\Controllers\Settings\OrganizationProfileController`
+- Controller: `App\Modules\Settings\Http\Controllers\OrganizationProfileController`
   - Uses `HasResourcePermission` with resource name `system setting`.
   - Stores a single profile record via `firstOrNew()`.
 - Request validation:

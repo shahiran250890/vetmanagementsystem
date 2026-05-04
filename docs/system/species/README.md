@@ -29,7 +29,7 @@ Prefix: `/settings/system/species`
 
 ## Backend
 
-- Controller: `App\Http\Controllers\Settings\SpeciesController`
+- Controller: `App\Modules\Settings\Http\Controllers\SpeciesController`
   - Uses `HasResourcePermission` with resource name `species`.
   - Uses clinic-type guard:
     - `speciesManagementEnabled()` forbids module when organization clinic type is `human`.
@@ -63,7 +63,7 @@ Prefix: `/settings/system/species`
 
 A separate breed CRUD exists:
 
-- Controller: `App\Http\Controllers\Settings\BreedController`
+- Controller: `App\Modules\Settings\Http\Controllers\BreedController`
 - Page: `resources/js/pages/settings/system/breeds/index.tsx`
 
 Current System navigation emphasizes species-first management, with breeds maintained from species form for common workflows.

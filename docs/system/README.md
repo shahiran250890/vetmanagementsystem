@@ -13,11 +13,13 @@ System modules documented here:
 - System Settings
 - Organization Profile
 
+Clinical modules (patients, appointments, medical records, billing) are documented at the application level in `docs/architecture.md` and `docs/database-tenant-schema.md`.
+
 ## Architecture summary
 
 - Backend routes: `routes/settings.php` under `settings/system`.
-- Backend controllers: `app/Http/Controllers/Settings/*Controller.php`.
-- Validation: `app/Http/Requests/Settings/*Request.php`.
+- Backend controllers: `app/Modules/Settings/Http/Controllers/*Controller.php`.
+- Validation: `app/Http/Requests/Settings/*Request.php` (shared FormRequests; not yet relocated under the module).
 - Frontend pages (Inertia React): `resources/js/pages/settings/system/**`.
 - Shared layout and nav:
   - `resources/js/layouts/settings/system-layout.tsx`

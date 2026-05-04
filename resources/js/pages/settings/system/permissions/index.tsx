@@ -1,11 +1,15 @@
 import { Form, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
+import { ListPageFilterActions } from '@/components/list-page-filter-actions';
+import { ListPageFilters } from '@/components/list-page-filters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
 type Permission = { id: number; name: string };
@@ -19,26 +23,31 @@ export default function PermissionsIndex({ permissions, editingPermission, formM
     const isFormPage = formMode === 'create' || formMode === 'edit';
     const action = isEdit ? `/settings/system/permissions/${editingPermission.id}` : '/settings/system/permissions';
     const [search, setSearch] = useState(filters?.search ?? '');
-    const [debouncedSearch, setDebouncedSearch] = useState(filters?.search ?? '');
     const [selectedDeletePermission, setSelectedDeletePermission] = useState<Permission | null>(null);
     const [deletingPermissionId, setDeletingPermissionId] = useState<number | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            setDebouncedSearch(search);
-        }, 300);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync applied server filters into local draft after Inertia navigation
+        setSearch(filters?.search ?? '');
+    }, [filters?.search]);
 
-        return () => clearTimeout(timeout);
-    }, [search]);
+    const applyFilters = () => {
+        router.get(
+            '/settings/system/permissions',
+            { search, page: 1 },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
-    useEffect(() => {
-        if (isFormPage || debouncedSearch === (filters?.search ?? '')) {
-            return;
-        }
-
-        router.get('/settings/system/permissions', { search: debouncedSearch }, { preserveState: true, preserveScroll: true, replace: true });
-    }, [debouncedSearch, filters?.search, isFormPage]);
+    const resetFilters = () => {
+        setSearch('');
+        router.get(
+            '/settings/system/permissions',
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
     const openDeleteDialog = (permission: Permission) => {
         if (!canDeletePermission || deletingPermissionId !== null) {
@@ -76,19 +85,39 @@ export default function PermissionsIndex({ permissions, editingPermission, formM
         <SystemLayout pageTitle="System Setting - Permission Management" breadcrumbs={breadcrumbs}>
             <div className="space-y-4">
                 {!isFormPage && (
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-1 items-center gap-2">
-                            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search permission name" />
+                    <ListPageFilters>
+                        <div className="grid w-full gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                            <div className="grid min-w-0 gap-2">
+                                <Label htmlFor="permission-search">Search</Label>
+                                <Input
+                                    id="permission-search"
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                    placeholder="Search permission name"
+                                />
+                            </div>
+                            <div className="flex flex-wrap items-end gap-2">
+                                <ListPageFilterActions
+                                    onApply={applyFilters}
+                                    onReset={resetFilters}
+                                />
+                                {canCreatePermission && (
+                                    <Button asChild className="shrink-0">
+                                        <Link href="/settings/system/permissions/create">
+                                            Add permission
+                                        </Link>
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                        {canCreatePermission && (
-                            <Button asChild>
-                                <Link href="/settings/system/permissions/create">Add permission</Link>
-                            </Button>
-                        )}
-                    </div>
+                    </ListPageFilters>
                 )}
                 {isFormPage && (canCreatePermission || canUpdatePermission) && (
-                    <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
+                    <Form
+                        action={action}
+                        method={isEdit ? 'put' : 'post'}
+                        className={cn(formPageSurfaceClassName, 'space-y-4')}
+                    >
                         {({ errors, processing }) => (
                             <>
                                 <div className="grid gap-2">

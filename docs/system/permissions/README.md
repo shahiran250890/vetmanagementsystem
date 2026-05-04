@@ -23,7 +23,7 @@ Prefix: `/settings/system/permissions`
 
 ## Backend
 
-- Controller: `App\Http\Controllers\Settings\PermissionController`
+- Controller: `App\Modules\Settings\Http\Controllers\PermissionController`
   - Uses `HasResourcePermission` with resource name `permission`.
   - Normalizes permission names through `SettingsPermissionName::normalizePermissionInput(...)`.
   - `show()` loads permission with related roles.

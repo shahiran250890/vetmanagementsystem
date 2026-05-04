@@ -1,9 +1,13 @@
 import { Form, Link } from '@inertiajs/react';
+import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
+import { cn } from '@/lib/utils';
+import { index as systemHome } from '@/routes/settings/system';
+import organizationRoutes from '@/routes/settings/system/organization';
 import type { BreadcrumbItem } from '@/types';
 
 type OrganizationProfile = {
@@ -16,8 +20,8 @@ type OrganizationProfile = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'System Setting', href: '/settings/system' },
-    { title: 'Organization Profile', href: '/settings/system/organization' },
+    { title: 'System Setting', href: systemHome() },
+    { title: 'Organization Profile', href: organizationRoutes.edit() },
 ];
 
 export default function OrganizationProfilePage({
@@ -34,7 +38,11 @@ export default function OrganizationProfilePage({
                     <h2 className="text-lg font-semibold">Organization Profile</h2>
                     <p className="text-sm text-muted-foreground">Define your clinic type and organization details.</p>
                 </div>
-                <Form action="/settings/system/organization" method="put" className="space-y-4 rounded border p-4">
+                <Form
+                    action={organizationRoutes.update.url()}
+                    method="put"
+                    className={cn(formPageSurfaceClassName, 'space-y-4')}
+                >
                     {({ errors, processing }) => (
                         <>
                             <div className="grid gap-2">
@@ -82,7 +90,7 @@ export default function OrganizationProfilePage({
                             <div className="flex gap-2">
                                 <Button disabled={!canUpdateSystemSetting || processing}>Save organization</Button>
                                 <Button variant="outline" asChild>
-                                    <Link href="/settings/system">Back</Link>
+                                    <Link href={systemHome()}>Back</Link>
                                 </Button>
                             </div>
                         </>

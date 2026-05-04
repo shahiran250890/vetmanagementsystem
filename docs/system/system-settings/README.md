@@ -23,7 +23,7 @@ Prefix: `/settings/system/system-settings`
 
 ## Backend
 
-- Controller: `App\Http\Controllers\Settings\SystemSettingController`
+- Controller: `App\Modules\Settings\Http\Controllers\SystemSettingController`
   - Uses `HasResourcePermission` with resource name `system setting`.
   - Returns list and form props in same Inertia page, controlled via `formMode`.
 - Request validation:

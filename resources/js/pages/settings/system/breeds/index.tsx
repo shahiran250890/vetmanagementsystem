@@ -1,9 +1,11 @@
 import { Form, Link, router } from '@inertiajs/react';
+import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
 type Breed = { id: number; species_id: number; name: string; code: string; is_enabled: boolean; species?: { id: number; name: string } };
@@ -16,11 +18,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function BreedsIndex({ breeds, speciesOptions, editingBreed, formMode = 'create', canCreateBreed, canUpdateBreed, canDeleteBreed }: { breeds: Breed[]; speciesOptions: SpeciesOption[]; editingBreed?: Breed; formMode?: 'create'|'edit'; canCreateBreed: boolean; canUpdateBreed: boolean; canDeleteBreed: boolean }) {
     const isEdit = formMode === 'edit' && editingBreed;
     const action = isEdit ? `/settings/system/breeds/${editingBreed.id}` : '/settings/system/breeds';
+
     return (
         <SystemLayout pageTitle="System Setting - Breed Management" breadcrumbs={breadcrumbs} contentClassName="max-w-xl">
                 <div className="space-y-4">
                     {(canCreateBreed || canUpdateBreed) && (
-                        <Form action={action} method={isEdit ? 'put' : 'post'} className="space-y-4 rounded border p-4">
+                        <Form
+                            action={action}
+                            method={isEdit ? 'put' : 'post'}
+                            className={cn(formPageSurfaceClassName, 'space-y-4')}
+                        >
                             {({ errors, processing }) => (
                                 <>
                                     <div className="grid gap-2">

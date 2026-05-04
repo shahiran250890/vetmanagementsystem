@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             BloodTypeSeeder::class,
             SettingsPermissionSeeder::class,
             UserSeeder::class,
+            PatientSeeder::class,
         ]);
     }
 }

@@ -1,14 +1,15 @@
 import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { Form, Link, usePage } from '@inertiajs/react';
+import ProfileController from '@/actions/App/Modules/Settings/Http/Controllers/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import AccountSettingsLayout from '@/layouts/settings/account-settings-layout';
+import { cn } from '@/lib/utils';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import type { BreadcrumbItem } from '@/types';
@@ -28,14 +29,14 @@ export default function Profile({
     status?: string;
 }) {
     const { auth } = usePage().props;
+    const user = auth.user;
+
+    if (!user) {
+        return null;
+    }
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
-
-            <h1 className="sr-only">Profile settings</h1>
-
-            <SettingsLayout>
+        <AccountSettingsLayout breadcrumbs={breadcrumbs} headTitle="Profile settings">
                 <div className="space-y-6">
                     <Heading
                         variant="small"
@@ -44,11 +45,12 @@ export default function Profile({
                     />
 
                     <Form
-                        {...ProfileController.update.form()}
+                        action={ProfileController.update.url()}
+                        method="patch"
                         options={{
                             preserveScroll: true,
                         }}
-                        className="space-y-6"
+                        className={cn(formPageSurfaceClassName, 'space-y-6')}
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
@@ -58,7 +60,7 @@ export default function Profile({
                                     <Input
                                         id="name"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
+                                        defaultValue={user.name}
                                         name="name"
                                         required
                                         autoComplete="name"
@@ -78,7 +80,7 @@ export default function Profile({
                                         id="email"
                                         type="email"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.email}
+                                        defaultValue={user.email}
                                         name="email"
                                         required
                                         autoComplete="username"
@@ -92,7 +94,7 @@ export default function Profile({
                                 </div>
 
                                 {mustVerifyEmail &&
-                                    auth.user.email_verified_at === null && (
+                                    user.email_verified_at === null && (
                                         <div>
                                             <p className="-mt-4 text-sm text-muted-foreground">
                                                 Your email address is
@@ -133,7 +135,7 @@ export default function Profile({
                                         leave="transition ease-in-out"
                                         leaveTo="opacity-0"
                                     >
-                                        <p className="text-sm text-neutral-600">
+                                        <p className="text-muted-foreground text-sm">
                                             Saved
                                         </p>
                                     </Transition>
@@ -144,7 +146,6 @@ export default function Profile({
                 </div>
 
                 <DeleteUser />
-            </SettingsLayout>
-        </AppLayout>
+        </AccountSettingsLayout>
     );
 }

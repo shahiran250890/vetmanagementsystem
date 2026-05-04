@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Patients\PatientController;
-use App\Http\Controllers\Patients\PatientHistoryController;
+use App\Modules\Patients\Http\Controllers\PatientController;
+use App\Modules\Patients\Http\Controllers\PatientHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('patients')->name('patients.')->group(function (): void {

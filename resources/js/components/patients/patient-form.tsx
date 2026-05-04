@@ -1,7 +1,13 @@
+import {
+    formPageInsetSectionClassName,
+    nativeSelectClassName,
+    nativeTextareaClassName,
+} from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import type {
     AllowedPatientType,
     BloodTypeOption,
@@ -48,7 +54,7 @@ export default function PatientForm({
                     <Label htmlFor="patient_type">Patient type</Label>
                     <select
                         id="patient_type"
-                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        className={nativeSelectClassName}
                         value={data.patient_type}
                         disabled={allowedPatientType !== null}
                         onChange={(event) =>
@@ -80,7 +86,7 @@ export default function PatientForm({
                     <Label htmlFor="sex">Sex</Label>
                     <select
                         id="sex"
-                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        className={nativeSelectClassName}
                         value={data.sex}
                         onChange={(event) => setData('sex', event.target.value)}
                     >
@@ -107,7 +113,7 @@ export default function PatientForm({
                     <Label htmlFor="status">Status</Label>
                     <select
                         id="status"
-                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        className={nativeSelectClassName}
                         value={data.status}
                         onChange={(event) =>
                             setData('status', event.target.value)
@@ -148,13 +154,20 @@ export default function PatientForm({
             </div>
 
             {data.patient_type === 'animal' ? (
-                <div className="grid gap-4 rounded-lg border p-4 md:grid-cols-2">
-                    <h3 className="md:col-span-2 text-sm font-medium">Animal profile</h3>
+                <div
+                    className={cn(
+                        'grid gap-4 md:grid-cols-2',
+                        formPageInsetSectionClassName,
+                    )}
+                >
+                    <h3 className="md:col-span-2 text-sm font-medium text-foreground">
+                        Animal profile
+                    </h3>
                     <div className="grid gap-2">
                         <Label htmlFor="owner_user_id">Owner</Label>
                         <select
                             id="owner_user_id"
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className={nativeSelectClassName}
                             value={data.animal_profile.owner_user_id}
                             onChange={(event) =>
                                 setData('animal_profile.owner_user_id', event.target.value)
@@ -173,10 +186,9 @@ export default function PatientForm({
                         <Label htmlFor="species">Species</Label>
                         <select
                             id="species"
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className={nativeSelectClassName}
                             value={data.animal_profile.species}
-                            onChange={(event) =>
-                                {
+                            onChange={(event) => {
                                     setData('animal_profile.species', event.target.value);
                                     setData('animal_profile.breed', '');
                                 }
@@ -195,7 +207,7 @@ export default function PatientForm({
                         <Label htmlFor="breed">Breed</Label>
                         <select
                             id="breed"
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className={nativeSelectClassName}
                             value={data.animal_profile.breed}
                             disabled={data.animal_profile.species === ''}
                             onChange={(event) =>
@@ -256,8 +268,15 @@ export default function PatientForm({
                     </div>
                 </div>
             ) : (
-                <div className="grid gap-4 rounded-lg border p-4 md:grid-cols-2">
-                    <h3 className="md:col-span-2 text-sm font-medium">Human profile</h3>
+                <div
+                    className={cn(
+                        'grid gap-4 md:grid-cols-2',
+                        formPageInsetSectionClassName,
+                    )}
+                >
+                    <h3 className="md:col-span-2 text-sm font-medium text-foreground">
+                        Human profile
+                    </h3>
                     <div className="grid gap-2">
                         <Label htmlFor="identification_number">ID number</Label>
                         <Input
@@ -272,7 +291,7 @@ export default function PatientForm({
                         <Label htmlFor="blood_type">Blood type</Label>
                         <select
                             id="blood_type"
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className={nativeSelectClassName}
                             value={data.human_profile.blood_type_id}
                             onChange={(event) =>
                                 setData(
@@ -341,7 +360,7 @@ export default function PatientForm({
                         <Label htmlFor="address">Address</Label>
                         <textarea
                             id="address"
-                            className="min-h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className={cn(nativeTextareaClassName, 'min-h-20')}
                             value={data.human_profile.address}
                             onChange={(event) =>
                                 setData('human_profile.address', event.target.value)
@@ -354,7 +373,7 @@ export default function PatientForm({
                         </Label>
                         <textarea
                             id="vital_medical_information"
-                            className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className={nativeTextareaClassName}
                             value={data.human_profile.vital_medical_information}
                             onChange={(event) =>
                                 setData(
@@ -374,7 +393,7 @@ export default function PatientForm({
                 <Label htmlFor="allergies">Allergies</Label>
                 <textarea
                     id="allergies"
-                    className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className={nativeTextareaClassName}
                     value={data.allergies}
                     onChange={(event) =>
                         setData('allergies', event.target.value)
@@ -386,7 +405,7 @@ export default function PatientForm({
                 <Label htmlFor="current_medications">Current medications</Label>
                 <textarea
                     id="current_medications"
-                    className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className={nativeTextareaClassName}
                     value={data.current_medications}
                     onChange={(event) =>
                         setData('current_medications', event.target.value)
@@ -398,7 +417,7 @@ export default function PatientForm({
                 <Label htmlFor="notes">Clinical notes</Label>
                 <textarea
                     id="notes"
-                    className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className={nativeTextareaClassName}
                     value={data.notes}
                     onChange={(event) => setData('notes', event.target.value)}
                 />

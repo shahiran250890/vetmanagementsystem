@@ -2,6 +2,9 @@
 
 namespace App\Models\Patients;
 
+use App\Models\Appointments\Appointment;
+use App\Models\Billing\Bill;
+use App\Models\Medical\MedicalRecord;
 use App\Models\User;
 use Database\Factories\Patients\PatientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,7 +27,6 @@ class Patient extends Model
         'patient_type',
         'user_id',
         'name',
-        'species',
         'breed',
         'sex',
         'date_of_birth',
@@ -34,7 +36,6 @@ class Patient extends Model
         'emergency_contact_phone',
         'allergies',
         'current_medications',
-        'latest_weight_kg',
         'vaccination_status',
         'status',
         'notes',
@@ -47,7 +48,6 @@ class Patient extends Model
     {
         return [
             'date_of_birth' => 'date',
-            'latest_weight_kg' => 'decimal:2',
         ];
     }
 
@@ -69,5 +69,25 @@ class Patient extends Model
     public function historyEntries(): HasMany
     {
         return $this->hasMany(PatientHistoryEntry::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function medicalRecords(): HasMany
+    {
+        return $this->hasMany(MedicalRecord::class);
+    }
+
+    public function bills(): HasMany
+    {
+        return $this->hasMany(Bill::class);
+    }
+
+    public function vitals(): HasMany
+    {
+        return $this->hasMany(PatientVital::class);
     }
 }

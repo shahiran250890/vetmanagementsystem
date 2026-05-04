@@ -1,6 +1,9 @@
 <?php
 
+use App\ViewModels\DashboardWidgets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::inertia('/', 'welcome', [
@@ -8,8 +11,16 @@ Route::inertia('/', 'welcome', [
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', function (Request $request) {
+        return Inertia::render('dashboard/index', [
+            'dashboardWidgets' => DashboardWidgets::visibleFor($request->user()),
+        ]);
+    })->name('dashboard');
 });
 
+Route::get('clinic', fn () => redirect()->route('dashboard'))->name('clinic.redirect');
+Route::get('clinic/{any}', fn () => redirect()->route('dashboard'))->where('any', '.*');
+
+require __DIR__.'/clinical.php';
 require __DIR__.'/settings.php';
 require __DIR__.'/patients.php';

@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\Settings\OrganizationProfileController;
-use App\Http\Controllers\Settings\PermissionController;
-use App\Http\Controllers\Settings\ProfileController;
-use App\Http\Controllers\Settings\RoleController;
-use App\Http\Controllers\Settings\SecurityController;
-use App\Http\Controllers\Settings\SpeciesController;
-use App\Http\Controllers\Settings\SystemSettingController;
-use App\Http\Controllers\Settings\UserManagementController;
+use App\Modules\Settings\Http\Controllers\OrganizationProfileController;
+use App\Modules\Settings\Http\Controllers\PermissionController;
+use App\Modules\Settings\Http\Controllers\ProfileController;
+use App\Modules\Settings\Http\Controllers\RoleController;
+use App\Modules\Settings\Http\Controllers\SecurityController;
+use App\Modules\Settings\Http\Controllers\SpeciesController;
+use App\Modules\Settings\Http\Controllers\SystemSettingController;
+use App\Modules\Settings\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {

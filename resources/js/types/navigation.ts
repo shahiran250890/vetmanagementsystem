@@ -10,5 +10,13 @@ export type NavItem = {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
+    /** When set, the user must have at least one of these roles. */
+    roles?: string[];
+    /** When set, the user must have at least one of these permissions. */
+    permissions?: string[];
     isActive?: boolean;
+    /**
+     * When true, render a plain anchor so the browser performs a full document load.
+     */
+    externalDocument?: boolean;
 };
