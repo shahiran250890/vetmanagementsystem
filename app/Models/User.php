@@ -28,6 +28,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'mmc_registration_number',
         'is_enabled',
         'password',
     ];

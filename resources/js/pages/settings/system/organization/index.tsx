@@ -1,5 +1,5 @@
 import { Form, Link } from '@inertiajs/react';
-import { formPageSurfaceClassName } from '@/components/form-page-layout';
+import { formPageSurfaceClassName, nativeTextareaClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ type OrganizationProfile = {
     organization_email: string;
     organization_fax: string;
     organization_license: string;
+    organization_address?: string | null;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -86,6 +87,19 @@ export default function OrganizationProfilePage({
                                 <Label htmlFor="organization_license">Organization License</Label>
                                 <Input id="organization_license" name="organization_license" defaultValue={organizationProfile?.organization_license ?? ''} disabled={!canUpdateSystemSetting} />
                                 <InputError message={errors.organization_license} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="organization_address">Organization address (for letterhead)</Label>
+                                <textarea
+                                    id="organization_address"
+                                    name="organization_address"
+                                    rows={3}
+                                    className={nativeTextareaClassName}
+                                    defaultValue={organizationProfile?.organization_address ?? ''}
+                                    disabled={!canUpdateSystemSetting}
+                                    placeholder="Street, city, postcode"
+                                />
+                                <InputError message={errors.organization_address} />
                             </div>
                             <div className="flex gap-2">
                                 <Button disabled={!canUpdateSystemSetting || processing}>Save organization</Button>

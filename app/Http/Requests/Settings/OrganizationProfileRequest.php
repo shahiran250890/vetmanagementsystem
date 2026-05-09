@@ -31,6 +31,7 @@ class OrganizationProfileRequest extends FormRequest
             'organization_email' => ['required', 'email', 'max:255'],
             'organization_fax' => ['required', 'string', 'max:50'],
             'organization_license' => ['required', 'string', 'max:255'],
+            'organization_address' => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

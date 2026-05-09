@@ -3,6 +3,7 @@
 namespace App\Modules\Patients\Http\Resources;
 
 use App\Models\Patients\Patient;
+use App\Modules\Medical\Http\Resources\MedicalCertificateResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -82,6 +83,12 @@ class PatientResource extends JsonResource
                     'appointment_id' => $record->appointment_id,
                     'diagnosis' => $record->diagnosis,
                 ])->all(),
+                [],
+            ),
+            'medical_certificates' => $this->whenLoaded(
+                'medicalCertificates',
+                fn (): array => MedicalCertificateResource::collection($this->medicalCertificates)
+                    ->resolve(),
                 [],
             ),
             'bills' => $this->whenLoaded(

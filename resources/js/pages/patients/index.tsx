@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 
 import type { Column } from '@/components/data-table';
 import { DataTable } from '@/components/data-table';
+import { PageHeader } from '@/components/page-header';
 import PatientFilters from '@/components/patients/patient-filters';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -123,21 +124,16 @@ export default function PatientsIndex({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Patients" />
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-foreground text-xl font-semibold">Patients</h1>
-                    <Button asChild>
-                        <Link href={create()}>Add patient</Link>
-                    </Button>
-                </div>
-
-                <PatientFilters
-                    search={search}
-                    status={status}
-                    onSearchChange={setSearch}
-                    onStatusChange={setStatus}
-                    onApply={applyFilters}
-                    onReset={resetFilters}
+            <div className="space-y-6">
+                <PageHeader
+                    breadcrumbs={breadcrumbs}
+                    title="Patients"
+                    description="Search and manage patient records."
+                    actions={
+                        <Button asChild>
+                            <Link href={create()}>Add patient</Link>
+                        </Button>
+                    }
                 />
 
                 <DataTable
@@ -145,6 +141,16 @@ export default function PatientsIndex({
                     rows={patients.data}
                     rowKey={(patient) => patient.id}
                     emptyMessage="No patients found."
+                    toolbar={
+                        <PatientFilters
+                            search={search}
+                            status={status}
+                            onSearchChange={setSearch}
+                            onStatusChange={setStatus}
+                            onApply={applyFilters}
+                            onReset={resetFilters}
+                        />
+                    }
                     serverPagination={{
                         totalCount: patients.total,
                         currentPage: patients.current_page,

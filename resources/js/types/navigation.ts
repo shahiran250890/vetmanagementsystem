@@ -10,6 +10,8 @@ export type NavItem = {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
+    /** Groups items under a sidebar section label. */
+    group?: string;
     /** When set, the user must have at least one of these roles. */
     roles?: string[];
     /** When set, the user must have at least one of these permissions. */

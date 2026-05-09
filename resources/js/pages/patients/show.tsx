@@ -1,5 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { SubmitEventHandler } from 'react';
+import { useState } from 'react';
 
 import {
     formPageSurfaceClassName,
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import medicalCertificateRoutes from '@/routes/patients/medical-certificates';
 import {
     edit as editPatient,
     index as patientsIndex,
@@ -21,7 +23,13 @@ import {
 import { store as storeHistory } from '@/routes/patients/history';
 import type { BreadcrumbItem, PatientRecord } from '@/types';
 
-export default function ShowPatient({ patient }: { patient: PatientRecord }) {
+export default function ShowPatient({
+    patient,
+    canManageMedicalCertificates = false,
+}: {
+    patient: PatientRecord;
+    canManageMedicalCertificates?: boolean;
+}) {
     const sexLabel =
         patient.sex === '1' ? 'Male' : patient.sex === '2' ? 'Female' : '-';
 
@@ -29,6 +37,8 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
         { title: 'Patients', href: patientsIndex() },
         { title: patient.name, href: showPatient(patient.id) },
     ];
+
+    const [voidReasonByCertId, setVoidReasonByCertId] = useState<Record<number, string>>({});
 
     const historyForm = useForm({
         entry_date: '',
@@ -189,6 +199,111 @@ export default function ShowPatient({ patient }: { patient: PatientRecord }) {
                         </div>
                     ) : null}
                 </section>
+
+                {canManageMedicalCertificates ? (
+                    <section className="space-y-4 rounded-lg border p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h2 className="text-lg font-medium">Medical certificates (MC)</h2>
+                            <Button asChild size="sm">
+                                <Link
+                                    href={medicalCertificateRoutes.create.url({
+                                        patient: patient.id,
+                                    })}
+                                >
+                                    Issue certificate
+                                </Link>
+                            </Button>
+                        </div>
+                        {patient.medical_certificates && patient.medical_certificates.length > 0 ? (
+                            <ul className="space-y-3 text-sm">
+                                {patient.medical_certificates.map((cert) => (
+                                    <li
+                                        key={cert.id}
+                                        className="rounded-md border bg-muted/30 p-3"
+                                    >
+                                        <div className="flex flex-wrap items-start justify-between gap-2">
+                                            <div className="space-y-1">
+                                                <p className="font-medium">
+                                                    {cert.certificate_number ?? '—'}
+                                                </p>
+                                                <p className="text-muted-foreground">
+                                                    {cert.unfit_from} → {cert.unfit_to}
+                                                    {cert.status === 'voided' ? (
+                                                        <span className="ml-2 font-semibold text-destructive">
+                                                            Voided
+                                                        </span>
+                                                    ) : null}
+                                                </p>
+                                                <p className="text-muted-foreground">
+                                                    Issued by {cert.doctor?.name ?? '—'}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Button asChild variant="outline" size="sm">
+                                                    <a
+                                                        href={medicalCertificateRoutes.print.url({
+                                                            patient: patient.id,
+                                                            medicalCertificate: cert.id,
+                                                        })}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        Print / PDF
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        {cert.can_void && cert.status !== 'voided' ? (
+                                            <div className="mt-3 space-y-2 border-t pt-3">
+                                                <Label htmlFor={`void-reason-${cert.id}`}>
+                                                    Void reason
+                                                </Label>
+                                                <textarea
+                                                    id={`void-reason-${cert.id}`}
+                                                    className={nativeTextareaClassName}
+                                                    rows={2}
+                                                    value={voidReasonByCertId[cert.id] ?? ''}
+                                                    onChange={(event) =>
+                                                        setVoidReasonByCertId((prev) => ({
+                                                            ...prev,
+                                                            [cert.id]: event.target.value,
+                                                        }))
+                                                    }
+                                                    placeholder="Required to void this certificate"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const reason = voidReasonByCertId[cert.id]?.trim() ?? '';
+                                                        if (!reason) {
+                                                            return;
+                                                        }
+                                                        router.post(
+                                                            medicalCertificateRoutes.void.url({
+                                                                patient: patient.id,
+                                                                medicalCertificate: cert.id,
+                                                            }),
+                                                            { void_reason: reason },
+                                                            { preserveScroll: true },
+                                                        );
+                                                    }}
+                                                >
+                                                    Void certificate
+                                                </Button>
+                                            </div>
+                                        ) : null}
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">
+                                No medical certificates issued yet.
+                            </p>
+                        )}
+                    </section>
+                ) : null}
 
                 <section className="space-y-4 rounded-lg border p-4">
                     <h2 className="text-lg font-medium">Encounter timeline</h2>

@@ -60,6 +60,28 @@ export type SpeciesOption = {
     breeds: BreedOption[];
 };
 
+export type MedicalCertificateSummary = {
+    id: number;
+    patient_id: number;
+    medical_record_id: number | null;
+    doctor_id: number;
+    certificate_number: string | null;
+    employer_name: string | null;
+    unfit_from: string | null;
+    unfit_to: string | null;
+    remarks: string | null;
+    status: string | null;
+    issued_at: string | null;
+    voided_at: string | null;
+    void_reason: string | null;
+    doctor?: {
+        id: number;
+        name: string;
+        mmc_registration_number: string | null;
+    };
+    can_void: boolean;
+};
+
 export type HistoryEntry = {
     id: number;
     entry_date: string | null;
@@ -122,4 +144,5 @@ export type PatientRecord = {
         vital_medical_information: string | null;
     } | null;
     history_entries: HistoryEntry[];
+    medical_certificates?: MedicalCertificateSummary[];
 };

@@ -33,6 +33,8 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
+- **vetms-ui-conventions** — ACTIVATE when adding or renaming `resources/js` pages, layouts, components, hooks, or services; when wiring `Inertia::render` page names; or when choosing layout shells (`AppLayout`, settings, auth) and component folders. Read `.cursor/skills/vetms-ui-conventions/SKILL.md`.
+
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.

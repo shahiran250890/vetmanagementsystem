@@ -4,6 +4,7 @@ namespace App\Models\Patients;
 
 use App\Models\Appointments\Appointment;
 use App\Models\Billing\Bill;
+use App\Models\Medical\MedicalCertificate;
 use App\Models\Medical\MedicalRecord;
 use App\Models\User;
 use Database\Factories\Patients\PatientFactory;
@@ -79,6 +80,11 @@ class Patient extends Model
     public function medicalRecords(): HasMany
     {
         return $this->hasMany(MedicalRecord::class);
+    }
+
+    public function medicalCertificates(): HasMany
+    {
+        return $this->hasMany(MedicalCertificate::class);
     }
 
     public function bills(): HasMany

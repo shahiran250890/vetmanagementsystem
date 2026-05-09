@@ -20,5 +20,6 @@ class OrganizationProfile extends Model
         'organization_email',
         'organization_fax',
         'organization_license',
+        'organization_address',
     ];
 }

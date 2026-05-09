@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 
+import { PageHeader } from '@/components/page-header';
 import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -29,14 +30,13 @@ export default function DashboardPage({
             <Head title="Dashboard" />
             <DashboardDataProvider widgetIds={widgetIds}>
                 <div className="space-y-8">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-foreground">
-                            Dashboard
-                        </h1>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                            Overview of clinic activity
-                        </p>
-                    </div>
+                    <PageHeader
+                        variant="gradient"
+                        breadcrumbs={breadcrumbs}
+                        title="Dashboard"
+                        description="Overview of clinic activity and key metrics."
+                    />
+
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {widgetIds.includes('total_patients') ? (
                             <TotalPatientsWidget />
@@ -47,10 +47,13 @@ export default function DashboardPage({
                         {widgetIds.includes('recent_revenue') ? (
                             <RecentRevenueWidget />
                         ) : null}
-                        {widgetIds.includes('my_schedule') ? (
-                            <MyScheduleWidget />
-                        ) : null}
                     </div>
+
+                    {widgetIds.includes('my_schedule') ? (
+                        <div className="max-w-3xl">
+                            <MyScheduleWidget />
+                        </div>
+                    ) : null}
                 </div>
             </DashboardDataProvider>
         </AppLayout>

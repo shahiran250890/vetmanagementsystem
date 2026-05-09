@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Medical\Http\Controllers\MedicalCertificateController;
 use App\Modules\Patients\Http\Controllers\PatientController;
 use App\Modules\Patients\Http\Controllers\PatientHistoryController;
 use Illuminate\Support\Facades\Route;
@@ -8,6 +9,16 @@ Route::middleware(['auth', 'verified'])->prefix('patients')->name('patients.')->
     Route::get('/', [PatientController::class, 'index'])->name('index');
     Route::get('/create', [PatientController::class, 'create'])->name('create');
     Route::post('/', [PatientController::class, 'store'])->name('store');
+    Route::middleware(['role:admin|superadmin|doctor|receptionist'])->group(function (): void {
+        Route::get('/{patient}/medical-certificates/create', [MedicalCertificateController::class, 'create'])
+            ->name('medical-certificates.create');
+        Route::post('/{patient}/medical-certificates', [MedicalCertificateController::class, 'store'])
+            ->name('medical-certificates.store');
+        Route::get('/{patient}/medical-certificates/{medicalCertificate}/print', [MedicalCertificateController::class, 'print'])
+            ->name('medical-certificates.print');
+        Route::post('/{patient}/medical-certificates/{medicalCertificate}/void', [MedicalCertificateController::class, 'void'])
+            ->name('medical-certificates.void');
+    });
     Route::get('/{patient}', [PatientController::class, 'show'])->name('show');
     Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('edit');
     Route::put('/{patient}', [PatientController::class, 'update'])->name('update');

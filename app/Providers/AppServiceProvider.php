@@ -6,6 +6,7 @@ use App\Contracts\Clinic\ClinicContext;
 use App\Models\Appointments\Appointment;
 use App\Models\Billing\Bill;
 use App\Models\Billing\Payment;
+use App\Models\Medical\MedicalCertificate;
 use App\Models\Medical\MedicalRecord;
 use App\Models\Patients\Patient;
 use App\Modules\Appointments\Events\AppointmentCreated;
@@ -17,8 +18,13 @@ use App\Modules\Billing\Listeners\RecordBillPatientAudit;
 use App\Modules\Billing\Listeners\RecordPaymentPatientAudit;
 use App\Modules\Billing\Policies\BillPolicy;
 use App\Modules\Billing\Policies\PaymentPolicy;
+use App\Modules\Medical\Events\MedicalCertificateIssued;
+use App\Modules\Medical\Events\MedicalCertificateVoided;
 use App\Modules\Medical\Events\MedicalRecordCreated;
+use App\Modules\Medical\Listeners\RecordMedicalCertificateIssuedPatientAudit;
+use App\Modules\Medical\Listeners\RecordMedicalCertificateVoidedPatientAudit;
 use App\Modules\Medical\Listeners\RecordMedicalRecordPatientAudit;
+use App\Modules\Medical\Policies\MedicalCertificatePolicy;
 use App\Modules\Medical\Policies\MedicalRecordPolicy;
 use App\Modules\Patients\Contracts\PatientAuditLogger;
 use App\Modules\Patients\Contracts\PatientOwnerDirectory;
@@ -60,11 +66,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Patient::class, PatientPolicy::class);
         Gate::policy(Appointment::class, AppointmentPolicy::class);
         Gate::policy(MedicalRecord::class, MedicalRecordPolicy::class);
+        Gate::policy(MedicalCertificate::class, MedicalCertificatePolicy::class);
         Gate::policy(Bill::class, BillPolicy::class);
         Gate::policy(Payment::class, PaymentPolicy::class);
 
         Event::listen(AppointmentCreated::class, RecordAppointmentPatientAudit::class);
         Event::listen(MedicalRecordCreated::class, RecordMedicalRecordPatientAudit::class);
+        Event::listen(MedicalCertificateIssued::class, RecordMedicalCertificateIssuedPatientAudit::class);
+        Event::listen(MedicalCertificateVoided::class, RecordMedicalCertificateVoidedPatientAudit::class);
         Event::listen(BillGenerated::class, RecordBillPatientAudit::class);
         Event::listen(PaymentReceived::class, RecordPaymentPatientAudit::class);
 

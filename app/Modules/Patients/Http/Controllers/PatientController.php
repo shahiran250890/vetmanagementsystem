@@ -4,8 +4,10 @@ namespace App\Modules\Patients\Http\Controllers;
 
 use App\Contracts\Clinic\ClinicContext;
 use App\Http\Controllers\Controller;
+use App\Models\Medical\MedicalCertificate;
 use App\Models\Patients\BloodType;
 use App\Models\Patients\Patient;
+use App\Models\Settings\OrganizationProfile;
 use App\Modules\Patients\Application\Services\PatientRecordService;
 use App\Modules\Patients\Contracts\PatientOwnerDirectory;
 use App\Modules\Patients\Contracts\SpeciesBreedCatalog;
@@ -15,6 +17,7 @@ use App\Modules\Patients\Http\Requests\StorePatientRequest;
 use App\Modules\Patients\Http\Requests\UpdatePatientRequest;
 use App\Modules\Patients\Http\Resources\PatientResource;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -82,8 +85,20 @@ class PatientController extends Controller
 
         $patient = $this->patientRecordService->show($patient);
 
+        $canManageMedicalCertificates = $patient->patient_type === 'human'
+            && Gate::allows('viewAny', MedicalCertificate::class)
+            && OrganizationProfile::query()->value('clinic_type') !== 'vet';
+
+        if ($canManageMedicalCertificates) {
+            $patient->load([
+                'medicalCertificates' => fn ($query) => $query->latest(),
+                'medicalCertificates.doctor',
+            ]);
+        }
+
         return Inertia::render('patients/show', [
             'patient' => PatientResource::make($patient)->resolve(),
+            'canManageMedicalCertificates' => $canManageMedicalCertificates,
         ]);
     }
 

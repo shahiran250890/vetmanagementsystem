@@ -27,6 +27,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         /*
+         * Server-to-server tenant provisioning calls POST without a browser session.
+         * Those routes use HMAC-signed headers and short-lived bearer tokens instead.
+         */
+        ValidateCsrfToken::except([
+            'api/internal/tenant-setup/*',
+        ]);
+
+        /*
          * The clinic SPA authenticates with the same session cookies as the Inertia app.
          * Laravel's default `api` group does not start the session, so `auth` on /api/v1/*
          * would never see a logged-in user. Mirror the web stack's cookie + session + CSRF

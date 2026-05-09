@@ -1,3 +1,4 @@
+import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -24,6 +25,8 @@ type Props<T> = {
     columns: Column<T>[];
     rows: T[];
     rowKey: (row: T) => string | number;
+    /** Shown above the table (e.g. filters or search). Rendered even when there are no rows. */
+    toolbar?: ReactNode;
     empty?: ReactNode;
     emptyMessage?: string;
     /** Client mode: initial rows per page (default 10). Ignored when `serverPagination` is set. */
@@ -49,7 +52,7 @@ function TableShell({
     return (
         <div
             className={cn(
-                'border-border bg-card text-card-foreground overflow-hidden rounded-xl border shadow-sm',
+                'border-border bg-card text-card-foreground overflow-hidden rounded-2xl border shadow-sm transition duration-200 ease-in-out',
                 className,
             )}
         >
@@ -62,6 +65,7 @@ export function DataTable<T>({
     columns,
     rows,
     rowKey,
+    toolbar,
     empty,
     emptyMessage = 'No data available',
     defaultPageSize = 10,
@@ -138,8 +142,26 @@ export function DataTable<T>({
     if (total === 0) {
         return (
             <TableShell className={className}>
-                <div className="border-border bg-muted/30 text-muted-foreground rounded-xl border border-dashed px-6 py-12 text-center text-sm">
-                    {empty ?? emptyMessage}
+                {toolbar ? (
+                    <div className="border-border bg-muted/15 border-b px-4 py-3">
+                        {toolbar}
+                    </div>
+                ) : null}
+                <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
+                    <div
+                        className="border-border bg-muted/40 text-muted-foreground flex size-14 items-center justify-center rounded-2xl border border-dashed"
+                        aria-hidden
+                    >
+                        <Inbox className="size-7" strokeWidth={1.5} />
+                    </div>
+                    <div className="max-w-sm space-y-1">
+                        <p className="text-foreground text-sm font-medium">
+                            Nothing to show yet
+                        </p>
+                        <div className="text-muted-foreground text-sm">
+                            {empty ?? emptyMessage}
+                        </div>
+                    </div>
                 </div>
             </TableShell>
         );
@@ -241,9 +263,14 @@ export function DataTable<T>({
 
     return (
         <TableShell className={className}>
+            {toolbar ? (
+                <div className="border-border bg-muted/15 border-b px-4 py-3">
+                    {toolbar}
+                </div>
+            ) : null}
             <div className="overflow-x-auto">
                 <table className="divide-border min-w-full divide-y text-left text-sm">
-                    <thead className="bg-muted/50 text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                    <thead className="bg-muted/45 text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                         <tr>
                             {columns.map((c) => (
                                 <th
@@ -270,7 +297,7 @@ export function DataTable<T>({
                             displayRows.map((row) => (
                                 <tr
                                     key={rowKey(row)}
-                                    className="hover:bg-muted/50"
+                                    className="hover:bg-muted/45 transition-colors duration-200 ease-in-out"
                                 >
                                     {columns.map((c) => (
                                         <td

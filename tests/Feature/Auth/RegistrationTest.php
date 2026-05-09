@@ -2,24 +2,34 @@
 
 use Laravel\Fortify\Features;
 
-beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::registration());
+test('public registration is not available', function () {
+    if (Features::enabled(Features::registration())) {
+        $this->markTestSkipped('Registration feature is enabled');
+    }
+
+    $this->get('/register')->assertNotFound();
 });
 
-test('registration screen can be rendered', function () {
-    $response = $this->get(route('register'));
+describe('when registration is enabled', function () {
+    beforeEach(function () {
+        $this->skipUnlessFortifyFeature(Features::registration());
+    });
 
-    $response->assertOk();
-});
+    test('registration screen can be rendered', function () {
+        $response = $this->get(route('register'));
 
-test('new users can register', function () {
-    $response = $this->post(route('register.store'), [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
-    ]);
+        $response->assertOk();
+    });
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    test('new users can register', function () {
+        $response = $this->post(route('register.store'), [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+    });
 });

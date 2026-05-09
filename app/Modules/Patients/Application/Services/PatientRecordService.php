@@ -2,6 +2,7 @@
 
 namespace App\Modules\Patients\Application\Services;
 
+use App\Contracts\Clinic\ClinicContext;
 use App\Models\Patients\BloodType;
 use App\Models\Patients\Patient;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -13,11 +14,21 @@ use Illuminate\Support\Facades\Schema;
 
 class PatientRecordService
 {
+    public function __construct(
+        protected ClinicContext $clinicContext,
+    ) {}
+
     public function paginate(string $search, string $status, string $patientType = '', int $perPage = 10): LengthAwarePaginator
     {
+        $enforcedPatientType = $this->clinicContext->allowedPatientType();
+        $effectivePatientType = $enforcedPatientType ?? ($patientType !== '' ? $patientType : null);
+
         return Patient::query()
             ->with(['animalProfile', 'humanProfile', 'user'])
-            ->when($patientType !== '', fn (Builder $query): Builder => $query->where('patient_type', $patientType))
+            ->when(
+                $effectivePatientType !== null,
+                fn (Builder $query): Builder => $query->where('patient_type', $effectivePatientType),
+            )
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $subQuery) use ($search): void {
                     $subQuery
