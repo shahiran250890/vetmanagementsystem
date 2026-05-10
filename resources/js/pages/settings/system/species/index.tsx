@@ -148,6 +148,15 @@ export default function SpeciesIndex({
     return (
         <SystemLayout pageTitle="System Setting - Species Management" breadcrumbs={breadcrumbs}>
             <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-lg font-semibold">Species Management</h2>
+                        <p className="text-sm text-muted-foreground">Maintain species records and linked breed options.</p>
+                    </div>
+                    <Button variant="outline" asChild>
+                        <Link href={systemHome()}>Back to system setting</Link>
+                    </Button>
+                </div>
                 {!isFormPage && (
                     <ListPageFilters>
                         <div className="grid w-full gap-4 md:grid-cols-[1fr_auto] md:items-end">

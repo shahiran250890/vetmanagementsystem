@@ -93,7 +93,9 @@ export type HistoryEntry = {
     appointment_id?: string | null;
     entry_type: string | null;
     title: string;
-    details: string;
+    details: string | null;
+    symptoms?: string | null;
+    diagnosis?: string | null;
     creator?: {
         id: number;
         name: string;

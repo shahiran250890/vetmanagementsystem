@@ -191,7 +191,13 @@ export function createPatientFormSchema(context: PatientFormSchemaContext): z.Zo
             if (data.patient_type === 'human') {
                 const hp = data.human_profile;
 
-                if (hp.identification_number.length > 255) {
+                if (!hp.identification_number.trim()) {
+                    refinementCtx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: 'Please provide IC/Passport for human patients.',
+                        path: ['human_profile', 'identification_number'],
+                    });
+                } else if (hp.identification_number.length > 255) {
                     refinementCtx.addIssue({
                         code: z.ZodIssueCode.custom,
                         message: 'Identification number must not exceed 255 characters.',
@@ -209,7 +215,13 @@ export function createPatientFormSchema(context: PatientFormSchemaContext): z.Zo
                     });
                 }
 
-                if (hp.primary_phone.length > 50) {
+                if (!hp.primary_phone.trim()) {
+                    refinementCtx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: 'Please provide phone number for human patients.',
+                        path: ['human_profile', 'primary_phone'],
+                    });
+                } else if (hp.primary_phone.length > 50) {
                     refinementCtx.addIssue({
                         code: z.ZodIssueCode.custom,
                         message: 'Primary phone must not exceed 50 characters.',

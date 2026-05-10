@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { NationalityOption } from '@/components/address-fields';
@@ -272,6 +272,17 @@ export default function StaffIndex({
     return (
         <SystemLayout pageTitle="System Setting - Staff Management" breadcrumbs={breadcrumbs}>
             <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-lg font-semibold">Staff Management</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Manage staff records, account access, and role assignments.
+                        </p>
+                    </div>
+                    <Button variant="outline" asChild>
+                        <Link href={systemHome()}>Back to system setting</Link>
+                    </Button>
+                </div>
                 <StaffToolbar
                     search={search}
                     onSearchChange={setSearch}

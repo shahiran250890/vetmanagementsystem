@@ -30,6 +30,22 @@ const tabs: PatientWorkspaceTab[] = [
     'medical-certificate',
 ];
 
+function formatLocalDate(value: Date): string {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function formatLocalDateTime(value: Date): string {
+    const date = formatLocalDate(value);
+    const hour = String(value.getHours()).padStart(2, '0');
+    const minute = String(value.getMinutes()).padStart(2, '0');
+
+    return `${date}T${hour}:${minute}`;
+}
+
 function tabFromUrl(canManageMedicalCertificates: boolean): PatientWorkspaceTab {
     if (typeof window === 'undefined') {
         return defaultTab;
@@ -51,10 +67,16 @@ function tabFromUrl(canManageMedicalCertificates: boolean): PatientWorkspaceTab 
 export default function PatientManagementPage({
     patient,
     canManageMedicalCertificates = false,
+    doctorOptions = [],
+    nurseOptions = [],
 }: {
     patient: PatientRecord;
     canManageMedicalCertificates?: boolean;
+    doctorOptions?: Array<{ id: number; name: string }>;
+    nurseOptions?: Array<{ id: number; name: string }>;
 }) {
+    const now = new Date();
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Patients', href: patientsIndex() },
         { title: patient.name, href: showPatient(patient.id) },
@@ -71,9 +93,8 @@ export default function PatientManagementPage({
     );
 
     const historyForm = useForm<NewMedicalRecordFormData>({
-        entry_date: '',
-        visit_at: '',
-        clinic_location: '',
+        entry_date: formatLocalDate(now),
+        visit_at: formatLocalDateTime(now),
         veterinarian_user_id: '',
         assistant_user_id: '',
         visit_type: 'consultation',
@@ -81,6 +102,8 @@ export default function PatientManagementPage({
         visit_status: 'waiting',
         entry_type: '',
         title: '',
+        symptoms: '',
+        diagnosis: '',
         details: '',
     });
 
@@ -146,6 +169,8 @@ export default function PatientManagementPage({
                                 onSetData={historyForm.setData}
                                 onReset={() => historyForm.reset()}
                                 patientType={patient.patient_type}
+                                doctorOptions={doctorOptions}
+                                nurseOptions={nurseOptions}
                             />
                         </TabPanel>
                     ) : null}

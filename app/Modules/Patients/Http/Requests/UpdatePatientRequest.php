@@ -103,9 +103,9 @@ class UpdatePatientRequest extends FormRequest
             : ['nullable'];
 
         return [
-            'human_profile.identification_number' => [$isHuman ? 'nullable' : 'prohibited', 'string', 'max:255'],
+            'human_profile.identification_number' => [$isHuman ? 'required' : 'prohibited', 'string', 'max:255'],
             'human_profile.blood_type_id' => [$isHuman ? 'nullable' : 'prohibited', ...$bloodTypeRule],
-            'human_profile.primary_phone' => [$isHuman ? 'nullable' : 'prohibited', 'string', 'max:50'],
+            'human_profile.primary_phone' => [$isHuman ? 'required' : 'prohibited', 'string', 'max:50'],
             'human_profile.address' => [$isHuman ? 'nullable' : 'prohibited', 'string'],
             'human_profile.height_cm' => [$isHuman ? 'nullable' : 'prohibited', 'numeric', 'min:30', 'max:260'],
             'human_profile.weight_kg' => [$isHuman ? 'nullable' : 'prohibited', 'numeric', 'min:1', 'max:500'],
@@ -129,6 +129,8 @@ class UpdatePatientRequest extends FormRequest
             'patient_type.in' => 'Patient type must match your organization clinic type.',
             'name.required' => 'Please provide the patient name.',
             'animal_profile.species.required' => 'Please provide the species for animal patients.',
+            'human_profile.identification_number.required' => 'Please provide IC/Passport for human patients.',
+            'human_profile.primary_phone.required' => 'Please provide phone number for human patients.',
             'status.required' => 'Please choose a patient status.',
             'status.in' => 'Patient status must be active, deceased, or transferred.',
         ];

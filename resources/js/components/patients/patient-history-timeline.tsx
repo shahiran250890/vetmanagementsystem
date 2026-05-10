@@ -42,7 +42,10 @@ export default function PatientHistoryTimeline({
                     </div>
                     <h3 className="mt-2 font-medium">{entry.title}</h3>
                     <p className="mt-2 whitespace-pre-wrap text-sm">
-                        {entry.details}
+                        {entry.symptoms ?? entry.details ?? '-'}
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                        Diagnosis: {entry.diagnosis ?? '-'}
                     </p>
                 </article>
             ))}

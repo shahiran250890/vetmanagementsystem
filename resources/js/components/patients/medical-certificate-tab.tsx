@@ -1,5 +1,5 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import { ExternalLink, FilePlus2, Printer, RotateCcw } from 'lucide-react';
+import { ExternalLink, FilePlus2, RotateCcw } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 
@@ -13,6 +13,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import medicalCertificateRoutes from '@/routes/patients/medical-certificates';
@@ -47,7 +53,7 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
     const [voidReasonByCertId, setVoidReasonByCertId] = useState<
         Record<number, string>
     >({});
-    const [previewCertificate, setPreviewCertificate] =
+    const [viewingCertificate, setViewingCertificate] =
         useState<MedicalCertificate | null>(null);
 
     const form = useForm<MedicalCertificateFormData>({
@@ -62,11 +68,38 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
         () => patient.medical_certificates ?? [],
         [patient.medical_certificates],
     );
+    const latestHistoryEntry = useMemo(
+        () => patient.history_entries?.[0] ?? null,
+        [patient.history_entries],
+    );
+    const resolvedReason = useMemo(() => {
+        const diagnosis = latestHistoryEntry?.diagnosis?.trim();
+        if (diagnosis) {
+            return diagnosis;
+        }
+
+        const legacyDetails = latestHistoryEntry?.details?.trim();
+        if (legacyDetails) {
+            return legacyDetails;
+        }
+
+        const manualRemarks = form.data.remarks.trim();
+
+        return manualRemarks === '' ? '' : manualRemarks;
+    }, [form.data.remarks, latestHistoryEntry?.details, latestHistoryEntry?.diagnosis]);
+    const previewFormData = useMemo(
+        () => ({ ...form.data, remarks: resolvedReason }),
+        [form.data, resolvedReason],
+    );
 
     const certificateDays = inclusiveDays(form.data.unfit_from, form.data.unfit_to);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        form.transform((data) => ({
+            ...data,
+            remarks: resolvedReason,
+        }));
         form.post(medicalCertificateRoutes.store.url({ patient: patient.id }), {
             preserveScroll: true,
         });
@@ -165,6 +198,10 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                                         form.setData('remarks', event.target.value)
                                     }
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Reason source priority: diagnosis, legacy
+                                    details, then manual remarks.
+                                </p>
                                 <InputError message={form.errors.remarks} />
                             </div>
 
@@ -183,7 +220,7 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                         </CardContent>
                     </Card>
 
-                    <StickyActionBar>
+                    <StickyActionBar className="xl:static xl:mx-0 xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:shadow-none xl:backdrop-blur-none">
                         <Button
                             type="button"
                             variant="outline"
@@ -191,14 +228,6 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                         >
                             <RotateCcw className="size-4" aria-hidden="true" />
                             Reset
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => window.print()}
-                        >
-                            <Printer className="size-4" aria-hidden="true" />
-                            Print MC
                         </Button>
                         <Button
                             type="submit"
@@ -214,11 +243,7 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                     </StickyActionBar>
                 </form>
 
-                <MCPreview
-                    patient={patient}
-                    certificate={previewCertificate}
-                    formData={form.data}
-                />
+                <MCPreview patient={patient} formData={previewFormData} />
             </div>
 
             <Card>
@@ -232,7 +257,7 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                             disabled={certificates.length === 0}
                             onClick={() => {
                                 if (certificates[0]) {
-                                    setPreviewCertificate(certificates[0]);
+                                    setViewingCertificate(certificates[0]);
                                 }
                             }}
                         >
@@ -317,7 +342,7 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() =>
-                                                            setPreviewCertificate(
+                                                            setViewingCertificate(
                                                                 certificate,
                                                             )
                                                         }
@@ -424,14 +449,30 @@ export default function MedicalCertificateTab({ patient }: { patient: Patient })
                 </CardContent>
             </Card>
 
-            {previewCertificate ? (
-                <div className="xl:hidden">
-                    <MCPreview
-                        patient={patient}
-                        certificate={previewCertificate}
-                    />
-                </div>
-            ) : null}
+            <Dialog
+                open={viewingCertificate !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setViewingCertificate(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-w-5xl p-0">
+                    <DialogHeader className="px-6 pt-6">
+                        <DialogTitle>Medical Certificate Preview</DialogTitle>
+                    </DialogHeader>
+                    {viewingCertificate ? (
+                        <iframe
+                            title="Medical Certificate"
+                            src={medicalCertificateRoutes.print.url({
+                                patient: patient.id,
+                                medicalCertificate: viewingCertificate.id,
+                            })}
+                            className="h-[75vh] w-full border-0"
+                        />
+                    ) : null}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

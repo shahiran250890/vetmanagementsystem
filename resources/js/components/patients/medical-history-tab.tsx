@@ -64,7 +64,14 @@ export default function MedicalHistoryTab({ patient }: { patient: Patient }) {
             const visitDate = String(entry.visit_at ?? entry.entry_date ?? '');
             const matchesSearch =
                 normalizedSearch === '' ||
-                [entry.title, entry.details, entry.visit_type, entry.entry_type]
+                [
+                    entry.title,
+                    entry.symptoms,
+                    entry.diagnosis,
+                    entry.details,
+                    entry.visit_type,
+                    entry.entry_type,
+                ]
                     .filter(Boolean)
                     .join(' ')
                     .toLowerCase()
@@ -286,12 +293,32 @@ export default function MedicalHistoryTab({ patient }: { patient: Patient }) {
                                 />
                                 <div>
                                     <p className="text-sm font-medium">
-                                        Clinical details
+                                        Symptoms (patient complaint)
                                     </p>
                                     <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-muted/60 p-4 text-sm leading-6">
-                                        {selectedEntry.details}
+                                        {selectedEntry.symptoms ??
+                                            selectedEntry.details ??
+                                            '-'}
                                     </p>
                                 </div>
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        Diagnosis (clinical assessment)
+                                    </p>
+                                    <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-muted/60 p-4 text-sm leading-6">
+                                        {selectedEntry.diagnosis ?? '-'}
+                                    </p>
+                                </div>
+                                {selectedEntry.details ? (
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            Legacy notes
+                                        </p>
+                                        <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-muted/60 p-4 text-sm leading-6">
+                                            {selectedEntry.details}
+                                        </p>
+                                    </div>
+                                ) : null}
                             </div>
                         </>
                     ) : null}

@@ -5,6 +5,7 @@ import type { Column } from '@/components/data-table';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import PatientFilters from '@/components/patients/patient-filters';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { create, index as patientsIndex, show } from '@/routes/patients';
@@ -108,14 +109,30 @@ export default function PatientsIndex({
                 key: 'actions',
                 header: 'Action',
                 className: 'text-right',
-                render: (patient) => (
-                    <Link
-                        href={show(patient.id)}
-                        className="text-primary text-sm font-medium hover:underline"
-                    >
-                        View
-                    </Link>
-                ),
+                render: (patient) => {
+                    return (
+                        <div className="flex items-center justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled
+                                className="gap-1.5"
+                            >
+                                Call-up
+                                <Badge
+                                    variant="secondary"
+                                    className="shrink-0 px-1.5 py-0 text-[10px] font-normal"
+                                >
+                                    Soon
+                                </Badge>
+                            </Button>
+                            <Button asChild size="sm">
+                                <Link href={show(patient.id)}>View</Link>
+                            </Button>
+                        </div>
+                    );
+                },
             },
         ],
         [],
@@ -131,7 +148,7 @@ export default function PatientsIndex({
                     description="Search and manage patient records."
                     actions={
                         <Button asChild>
-                            <Link href={create()}>Add patient</Link>
+                            <Link href={create()}>Register patient</Link>
                         </Button>
                     }
                 />

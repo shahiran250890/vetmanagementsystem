@@ -114,6 +114,30 @@ test('human patient can be created', function () {
     expect($patient->humanProfile?->blood_pressure)->toBe('120/80');
 });
 
+test('human patient validation requires ic passport and phone number', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from(route('patients.create'))
+        ->post(route('patients.store'), [
+            'patient_type' => 'human',
+            'name' => 'John Carter',
+            'status' => 'active',
+            'human_profile' => [
+                'identification_number' => '',
+                'primary_phone' => '',
+            ],
+        ]);
+
+    $response
+        ->assertSessionHasErrors([
+            'human_profile.identification_number',
+            'human_profile.primary_phone',
+        ])
+        ->assertRedirect(route('patients.create'));
+});
+
 test('patient type follows organization clinic type for create and update', function () {
     $user = User::factory()->create();
     $owner = User::factory()->create();

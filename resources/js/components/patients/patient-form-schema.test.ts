@@ -69,4 +69,33 @@ describe('createPatientFormSchema', () => {
 
         expect(result.success).toBe(false);
     });
+
+    it('requires ic/passport and phone no for human patients', () => {
+        const schema = createPatientFormSchema({ allowedPatientTypes: ['animal', 'human'] });
+        const result = schema.safeParse({
+            ...baseAnimal(),
+            patient_type: 'human',
+            animal_profile: {
+                owner_user_id: '',
+                species: '',
+                breed: '',
+                color: '',
+                microchip_number: '',
+                latest_weight_kg: '',
+                vaccination_status: '',
+            },
+            human_profile: {
+                identification_number: '   ',
+                blood_type_id: '',
+                primary_phone: '   ',
+                address: '',
+                height_cm: '',
+                weight_kg: '',
+                blood_pressure: '',
+                vital_medical_information: '',
+            },
+        });
+
+        expect(result.success).toBe(false);
+    });
 });

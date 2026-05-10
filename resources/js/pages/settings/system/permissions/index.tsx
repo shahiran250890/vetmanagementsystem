@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
 import { cn } from '@/lib/utils';
+import { index as systemHome } from '@/routes/settings/system';
 import type { BreadcrumbItem } from '@/types';
 
 type Permission = { id: number; name: string };
@@ -84,6 +85,17 @@ export default function PermissionsIndex({ permissions, editingPermission, formM
     return (
         <SystemLayout pageTitle="System Setting - Permission Management" breadcrumbs={breadcrumbs}>
             <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-lg font-semibold">Permission Management</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Manage permission keys used in access control rules.
+                        </p>
+                    </div>
+                    <Button variant="outline" asChild>
+                        <Link href={systemHome()}>Back to system setting</Link>
+                    </Button>
+                </div>
                 {!isFormPage && (
                     <ListPageFilters>
                         <div className="grid w-full gap-4 md:grid-cols-[1fr_auto] md:items-end">

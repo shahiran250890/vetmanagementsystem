@@ -53,7 +53,10 @@ class MedicalCertificateController extends Controller
 
         $certificate = $this->medicalCertificateService->issue($patient, $user, $request->validated());
 
-        return redirect()->route('patients.show', $patient)
+        return redirect()->route('patients.show', [
+            'patient' => $patient,
+            'tab' => 'medical-certificate',
+        ])
             ->with('flash_medical_certificate_id', $certificate->id);
     }
 

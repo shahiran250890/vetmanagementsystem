@@ -8,6 +8,7 @@ use App\Models\Medical\MedicalCertificate;
 use App\Models\Patients\BloodType;
 use App\Models\Patients\Patient;
 use App\Models\Settings\OrganizationProfile;
+use App\Models\User;
 use App\Modules\Patients\Application\Services\PatientRecordService;
 use App\Modules\Patients\Contracts\PatientOwnerDirectory;
 use App\Modules\Patients\Contracts\SpeciesBreedCatalog;
@@ -99,6 +100,8 @@ class PatientController extends Controller
         return Inertia::render('patients/show', [
             'patient' => PatientResource::make($patient)->resolve(),
             'canManageMedicalCertificates' => $canManageMedicalCertificates,
+            'doctorOptions' => $this->clinicalStaffOptions('doctor'),
+            'nurseOptions' => $this->clinicalStaffOptions('nurse'),
         ]);
     }
 
@@ -165,5 +168,26 @@ class PatientController extends Controller
     protected function hasBloodTypesTable(): bool
     {
         return Schema::connection('tenant')->hasTable('blood_types');
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string}>
+     */
+    protected function clinicalStaffOptions(string $roleName): array
+    {
+        /** @var array<int, array{id: int, name: string}> $users */
+        $users = User::query()
+            ->select(['id', 'name'])
+            ->where('is_enabled', true)
+            ->whereHas('roles', fn ($query) => $query->where('name', $roleName))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ])
+            ->all();
+
+        return $users;
     }
 }

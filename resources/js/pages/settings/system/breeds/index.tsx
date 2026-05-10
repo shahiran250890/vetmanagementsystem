@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SystemLayout from '@/layouts/settings/system-layout';
 import { cn } from '@/lib/utils';
+import { index as systemHome } from '@/routes/settings/system';
 import type { BreadcrumbItem } from '@/types';
 
 type Breed = { id: number; species_id: number; name: string; code: string; is_enabled: boolean; species?: { id: number; name: string } };
@@ -23,6 +24,15 @@ export default function BreedsIndex({ breeds, speciesOptions, editingBreed, form
     return (
         <SystemLayout pageTitle="System Setting - Breed Management" breadcrumbs={breadcrumbs} contentClassName="max-w-xl">
                 <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-lg font-semibold">Breed Management</h2>
+                            <p className="text-sm text-muted-foreground">Manage species breeds and their availability.</p>
+                        </div>
+                        <Button variant="outline" asChild>
+                            <Link href={systemHome()}>Back to system setting</Link>
+                        </Button>
+                    </div>
                     {(canCreateBreed || canUpdateBreed) && (
                         <Form
                             action={action}

@@ -21,7 +21,7 @@ import type {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Patients', href: index() },
-    { title: 'Create', href: create() },
+    { title: 'Register', href: create() },
 ];
 
 export default function CreatePatient({
@@ -103,8 +103,8 @@ export default function CreatePatient({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create patient" />
-            <FormPageContent title="Create patient" backHref={index()} backLabel="Back to patients">
+            <Head title="Register patient" />
+            <FormPageContent title="Register patient" backHref={index()} backLabel="Back to patients">
                 <form onSubmit={submit} className={formPageSurfaceClassName}>
                     <PatientForm
                         data={data}
@@ -114,7 +114,7 @@ export default function CreatePatient({
                         owners={owners}
                         bloodTypes={bloodTypes}
                         speciesOptions={speciesOptions}
-                        submitLabel="Create patient"
+                        submitLabel="Register patient"
                         allowedPatientType={allowedPatientType}
                     />
                 </form>

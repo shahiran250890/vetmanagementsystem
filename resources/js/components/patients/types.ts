@@ -42,7 +42,6 @@ export type VitalSigns = {
 export type NewMedicalRecordFormData = {
     entry_date: string;
     visit_at: string;
-    clinic_location: string;
     veterinarian_user_id: string;
     assistant_user_id: string;
     visit_type: string;
@@ -50,6 +49,8 @@ export type NewMedicalRecordFormData = {
     visit_status: string;
     entry_type: string;
     title: string;
+    symptoms: string;
+    diagnosis: string;
     details: string;
 };
 

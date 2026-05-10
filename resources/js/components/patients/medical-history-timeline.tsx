@@ -90,7 +90,10 @@ export default function MedicalHistoryTimeline({
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <p className="line-clamp-3 whitespace-pre-wrap text-sm leading-6">
-                                {entry.details}
+                                {entry.symptoms ?? entry.details ?? '-'}
+                            </p>
+                            <p className="line-clamp-2 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">
+                                Diagnosis: {entry.diagnosis ?? '-'}
                             </p>
 
                             <div className="grid gap-3 text-xs text-muted-foreground md:grid-cols-2 xl:grid-cols-3">

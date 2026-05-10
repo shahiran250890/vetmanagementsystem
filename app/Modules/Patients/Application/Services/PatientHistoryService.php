@@ -17,6 +17,8 @@ class PatientHistoryService
             'description' => $validated['title'] ?? null,
             'metadata' => [
                 'title' => $validated['title'] ?? null,
+                'symptoms' => $validated['symptoms'] ?? null,
+                'diagnosis' => $validated['diagnosis'] ?? null,
                 'details' => $validated['details'] ?? null,
                 'entry_date' => $validated['entry_date'] ?? null,
                 'visit_at' => $validated['visit_at'] ?? null,

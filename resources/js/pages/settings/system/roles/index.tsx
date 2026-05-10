@@ -89,6 +89,15 @@ export default function RolesIndex({ roles, permissions = [], editingRole, formM
     return (
         <SystemLayout pageTitle="System Setting - Role Management" breadcrumbs={breadcrumbs}>
             <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-lg font-semibold">Role Management</h2>
+                        <p className="text-sm text-muted-foreground">Configure roles and assign related permissions.</p>
+                    </div>
+                    <Button variant="outline" asChild>
+                        <Link href={systemHome()}>Back to system setting</Link>
+                    </Button>
+                </div>
                 {!isFormPage && (
                     <ListPageFilters>
                         <div className="grid w-full gap-4 md:grid-cols-[1fr_auto] md:items-end">

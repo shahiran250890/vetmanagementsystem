@@ -68,7 +68,7 @@ export default function PatientForm({
                     <FormDropdown
                         id="patient_type"
                         name="patient_type"
-                        label="Patient type"
+                        label="Patient type *"
                         options={patientTypeOptions}
                         value={data.patient_type}
                         onValueChange={(v) => setData('patient_type', v as PatientType)}
@@ -85,7 +85,7 @@ export default function PatientForm({
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">Name *</Label>
                     <Input
                         id="name"
                         value={data.name}
@@ -118,7 +118,7 @@ export default function PatientForm({
                     <FormDropdown
                         id="status"
                         name="status"
-                        label="Status"
+                        label="Status *"
                         options={[
                             { value: 'active', label: 'Active' },
                             { value: 'deceased', label: 'Deceased' },
@@ -190,7 +190,7 @@ export default function PatientForm({
                         <FormDropdown
                             id="species"
                             name="animal_profile.species"
-                            label="Species"
+                            label="Species *"
                             options={speciesOptions.map((species) => ({
                                 value: species.name,
                                 label: species.name,
@@ -279,7 +279,7 @@ export default function PatientForm({
                         Human profile
                     </h3>
                     <div className="grid gap-2">
-                        <Label htmlFor="identification_number">ID number</Label>
+                        <Label htmlFor="identification_number">IC/Passport *</Label>
                         <Input
                             id="identification_number"
                             value={data.human_profile.identification_number}
@@ -306,7 +306,7 @@ export default function PatientForm({
                         <InputError message={errors['human_profile.blood_type_id']} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="primary_phone">Primary phone</Label>
+                        <Label htmlFor="primary_phone">Phone no *</Label>
                         <Input
                             id="primary_phone"
                             value={data.human_profile.primary_phone}

@@ -6,9 +6,11 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
+import { useEffect } from 'react';
 
 import { FormDropdown } from '@/components/form-dropdown';
 import { nativeTextareaClassName } from '@/components/form-page-layout';
+import { useAuthRoles } from '@/hooks/use-auth-roles';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +42,8 @@ export default function NewMedicalRecordTab({
     onSetData,
     onReset,
     patientType,
+    doctorOptions,
+    nurseOptions,
 }: {
     data: NewMedicalRecordFormData;
     errors: FormErrors<NewMedicalRecordFormData>;
@@ -51,9 +55,36 @@ export default function NewMedicalRecordTab({
     ) => void;
     onReset: () => void;
     patientType: Patient['patient_type'];
+    doctorOptions: Array<{ id: number; name: string }>;
+    nurseOptions: Array<{ id: number; name: string }>;
 }) {
-    const clinicianIdLabel =
-        patientType === 'animal' ? 'Veterinarian ID' : 'Doctor ID';
+    const { hasAnyRole, auth } = useAuthRoles();
+    const canEditDoctorDropdown = hasAnyRole('admin', 'superadmin');
+    const shouldAutoAssignDoctor =
+        hasAnyRole('doctor') && !canEditDoctorDropdown;
+    const clinicianLabel = patientType === 'animal' ? 'Veterinarian' : 'Doctor';
+
+    useEffect(() => {
+        if (!shouldAutoAssignDoctor) {
+            return;
+        }
+
+        const currentUserId = auth.user?.id;
+        if (!currentUserId) {
+            return;
+        }
+
+        if (data.veterinarian_user_id === String(currentUserId)) {
+            return;
+        }
+
+        onSetData('veterinarian_user_id', String(currentUserId));
+    }, [
+        auth.user?.id,
+        data.veterinarian_user_id,
+        onSetData,
+        shouldAutoAssignDoctor,
+    ]);
 
     return (
         <form onSubmit={onSubmit} className="space-y-4">
@@ -72,9 +103,8 @@ export default function NewMedicalRecordTab({
                             id="entry_date"
                             type="date"
                             value={data.entry_date}
-                            onChange={(event) =>
-                                onSetData('entry_date', event.target.value)
-                            }
+                            readOnly
+                            disabled
                         />
                         <InputError message={errors.entry_date} />
                     </Field>
@@ -83,43 +113,50 @@ export default function NewMedicalRecordTab({
                             id="visit_at"
                             type="datetime-local"
                             value={data.visit_at}
-                            onChange={(event) =>
-                                onSetData('visit_at', event.target.value)
-                            }
+                            readOnly
+                            disabled
                         />
                         <InputError message={errors.visit_at} />
                     </Field>
-                    <Field label="Clinic Location / Branch" htmlFor="clinic_location">
-                        <Input
-                            id="clinic_location"
-                            value={data.clinic_location}
-                            onChange={(event) =>
-                                onSetData('clinic_location', event.target.value)
-                            }
-                        />
-                        <InputError message={errors.clinic_location} />
-                    </Field>
-                    <Field label={clinicianIdLabel} htmlFor="veterinarian_user_id">
-                        <Input
+                    <div className="grid gap-2">
+                        <FormDropdown
                             id="veterinarian_user_id"
+                            name="veterinarian_user_id"
+                            label={clinicianLabel}
+                            options={doctorOptions.map((doctor) => ({
+                                value: String(doctor.id),
+                                label: doctor.name,
+                            }))}
                             value={data.veterinarian_user_id}
-                            onChange={(event) =>
-                                onSetData(
-                                    'veterinarian_user_id',
-                                    event.target.value,
-                                )
+                            onValueChange={(v) =>
+                                onSetData('veterinarian_user_id', v)
                             }
+                            allowEmpty
+                            emptyOptionLabel=""
+                            placeholder="Please select"
+                            error={errors.veterinarian_user_id}
+                            disabled={!canEditDoctorDropdown}
                         />
-                    </Field>
-                    <Field label="Assistant / Nurse ID" htmlFor="assistant_user_id">
-                        <Input
+                    </div>
+                    <div className="grid gap-2">
+                        <FormDropdown
                             id="assistant_user_id"
+                            name="assistant_user_id"
+                            label="Assistant/Nurse"
+                            options={nurseOptions.map((nurse) => ({
+                                value: String(nurse.id),
+                                label: nurse.name,
+                            }))}
                             value={data.assistant_user_id}
-                            onChange={(event) =>
-                                onSetData('assistant_user_id', event.target.value)
+                            onValueChange={(v) =>
+                                onSetData('assistant_user_id', v)
                             }
+                            allowEmpty
+                            emptyOptionLabel=""
+                            placeholder="Please select"
+                            error={errors.assistant_user_id}
                         />
-                    </Field>
+                    </div>
                     <div className="grid gap-2">
                         <FormDropdown
                             id="visit_type"
@@ -201,11 +238,41 @@ export default function NewMedicalRecordTab({
                         />
                         <InputError message={errors.title} />
                     </Field>
-                    <Field label="Details" htmlFor="details">
+                    <Field
+                        label="Symptoms (Patient complaint)"
+                        htmlFor="symptoms"
+                    >
+                        <textarea
+                            id="symptoms"
+                            className={nativeTextareaClassName}
+                            rows={5}
+                            value={data.symptoms}
+                            onChange={(event) =>
+                                onSetData('symptoms', event.target.value)
+                            }
+                        />
+                        <InputError message={errors.symptoms} />
+                    </Field>
+                    <Field
+                        label="Diagnosis (Clinical assessment)"
+                        htmlFor="diagnosis"
+                    >
+                        <textarea
+                            id="diagnosis"
+                            className={nativeTextareaClassName}
+                            rows={5}
+                            value={data.diagnosis}
+                            onChange={(event) =>
+                                onSetData('diagnosis', event.target.value)
+                            }
+                        />
+                        <InputError message={errors.diagnosis} />
+                    </Field>
+                    <Field label="Details (Legacy / optional notes)" htmlFor="details">
                         <textarea
                             id="details"
                             className={nativeTextareaClassName}
-                            rows={7}
+                            rows={5}
                             value={data.details}
                             onChange={(event) =>
                                 onSetData('details', event.target.value)
@@ -231,9 +298,9 @@ export default function NewMedicalRecordTab({
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-muted-foreground">
-                                Use the clinical details field above until a
-                                dedicated {title.toLowerCase()} data field is
-                                available in the current record API.
+                                Dedicated {title.toLowerCase()} fields are
+                                being rolled out. Use diagnosis plus optional
+                                details as needed for now.
                             </p>
                         </CardContent>
                     </Card>

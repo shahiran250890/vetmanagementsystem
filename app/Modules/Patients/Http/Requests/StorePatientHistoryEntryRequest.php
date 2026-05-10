@@ -5,6 +5,7 @@ namespace App\Modules\Patients\Http\Requests;
 use App\Models\Patients\Patient;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StorePatientHistoryEntryRequest extends FormRequest
 {
@@ -30,7 +31,7 @@ class StorePatientHistoryEntryRequest extends FormRequest
             'entry_date' => ['required', 'date'],
             'visit_case_number' => ['prohibited'],
             'visit_at' => ['required', 'date'],
-            'clinic_location' => ['required', 'string', 'max:255'],
+            'clinic_location' => ['nullable', 'string', 'max:255'],
             'veterinarian_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'assistant_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'visit_type' => ['required', 'string', 'max:255'],
@@ -38,8 +39,34 @@ class StorePatientHistoryEntryRequest extends FormRequest
             'visit_status' => ['required', 'string', 'in:waiting,in_progress,completed,cancelled'],
             'entry_type' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
-            'details' => ['required', 'string'],
+            'symptoms' => ['nullable', 'string'],
+            'diagnosis' => ['nullable', 'string'],
+            'details' => ['nullable', 'string'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $symptoms = trim((string) $this->input('symptoms', ''));
+            $details = trim((string) $this->input('details', ''));
+            $diagnosis = trim((string) $this->input('diagnosis', ''));
+            $visitStatus = (string) $this->input('visit_status', '');
+
+            if ($symptoms === '' && $details === '') {
+                $validator->errors()->add(
+                    'symptoms',
+                    'Please provide symptoms or legacy details.',
+                );
+            }
+
+            if ($visitStatus === 'completed' && $diagnosis === '') {
+                $validator->errors()->add(
+                    'diagnosis',
+                    'Please provide diagnosis before completing the visit.',
+                );
+            }
+        });
     }
 
     /**
@@ -50,11 +77,9 @@ class StorePatientHistoryEntryRequest extends FormRequest
         return [
             'entry_date.required' => 'Please provide an entry date.',
             'visit_at.required' => 'Please provide visit date and time.',
-            'clinic_location.required' => 'Please provide clinic location.',
             'visit_type.required' => 'Please provide visit type.',
             'visit_status.required' => 'Please provide visit status.',
             'title.required' => 'Please provide a title for this history entry.',
-            'details.required' => 'Please provide clinical details.',
         ];
     }
 }
