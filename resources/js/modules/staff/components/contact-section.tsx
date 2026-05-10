@@ -16,17 +16,22 @@ export function ContactSection({
     return (
         <div className="grid gap-4 sm:grid-cols-2">
             <FormInput
-                label="Mobile number"
+                label="Mobile number *"
                 name="mobile_number"
+                required
+                aria-required="true"
                 defaultValue={managedStaff?.mobile_number ?? ''}
                 error={errors.mobile_number}
             />
             <FormInput label="Alternate number" name="alternate_phone" defaultValue={managedStaff?.alternate_phone ?? ''} />
             <div className="sm:col-span-2">
                 <FormInput
-                    label="Work / contact email"
+                    label="Work / contact email *"
                     name="email"
                     type="email"
+                    required
+                    aria-required="true"
+                    autoComplete="email"
                     defaultValue={managedStaff?.email ?? ''}
                     error={errors.email}
                 />

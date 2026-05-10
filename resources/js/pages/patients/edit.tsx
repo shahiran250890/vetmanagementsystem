@@ -1,10 +1,14 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import type { SubmitEventHandler } from 'react';
+
 import { FormPageContent, formPageSurfaceClassName } from '@/components/form-page-layout';
 import PatientForm from '@/components/patients/patient-form';
+import { createPatientFormSchema } from '@/components/patients/patient-form-schema';
 import { createPatientFormFieldHandler } from '@/hooks/use-patient-form-field-handler';
 import AppLayout from '@/layouts/app-layout';
 import { normalizeGenderSelectValue } from '@/lib/gender-selection';
+import { zodIssuesToDotRecord } from '@/lib/zod-error-map';
 import { edit, index, show, update } from '@/routes/patients';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -13,6 +17,7 @@ import type {
     OwnerOption,
     PatientFormData,
     PatientRecord,
+    PatientType,
     SpeciesOption,
 } from '@/types/patient';
 
@@ -54,21 +59,14 @@ export default function EditPatient({
             breed: patient.animal_profile?.breed ?? patient.breed ?? '',
             color: patient.animal_profile?.color ?? patient.color ?? '',
             microchip_number:
-                patient.animal_profile?.microchip_number ??
-                patient.microchip_number ??
-                '',
+                patient.animal_profile?.microchip_number ?? patient.microchip_number ?? '',
             latest_weight_kg:
-                patient.animal_profile?.latest_weight_kg ??
-                patient.latest_weight_kg ??
-                '',
+                patient.animal_profile?.latest_weight_kg ?? patient.latest_weight_kg ?? '',
             vaccination_status:
-                patient.animal_profile?.vaccination_status ??
-                patient.vaccination_status ??
-                '',
+                patient.animal_profile?.vaccination_status ?? patient.vaccination_status ?? '',
         },
         human_profile: {
-            identification_number:
-                patient.human_profile?.identification_number ?? '',
+            identification_number: patient.human_profile?.identification_number ?? '',
             blood_type_id: patient.human_profile?.blood_type_id
                 ? String(patient.human_profile.blood_type_id)
                 : '',
@@ -77,13 +75,39 @@ export default function EditPatient({
             height_cm: patient.human_profile?.height_cm ?? '',
             weight_kg: patient.human_profile?.weight_kg ?? '',
             blood_pressure: patient.human_profile?.blood_pressure ?? '',
-            vital_medical_information:
-                patient.human_profile?.vital_medical_information ?? '',
+            vital_medical_information: patient.human_profile?.vital_medical_information ?? '',
         },
     });
 
+    const allowedPatientTypes = useMemo((): PatientType[] => {
+        if (allowedPatientType !== null) {
+            return [allowedPatientType];
+        }
+
+        return ['human', 'animal'];
+    }, [allowedPatientType]);
+
+    const schema = useMemo(
+        () => createPatientFormSchema({ allowedPatientTypes }),
+        [allowedPatientTypes],
+    );
+
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+
+    const mergedErrors = useMemo(() => ({ ...errors, ...clientErrors }), [errors, clientErrors]);
+
     const submit: SubmitEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
+
+        const result = schema.safeParse(data);
+
+        if (!result.success) {
+            setClientErrors(zodIssuesToDotRecord(result.error));
+
+            return;
+        }
+
+        setClientErrors({});
         put(update.url(patient.id));
     };
 
@@ -92,16 +116,12 @@ export default function EditPatient({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${patient.name}`} />
-            <FormPageContent
-                title="Edit patient"
-                backHref={show(patient.id)}
-                backLabel="Back to patient"
-            >
+            <FormPageContent title="Edit patient" backHref={show(patient.id)} backLabel="Back to patient">
                 <form onSubmit={submit} className={formPageSurfaceClassName}>
                     <PatientForm
                         data={data}
                         setData={updateFormData}
-                        errors={errors}
+                        errors={mergedErrors}
                         processing={processing}
                         owners={owners}
                         bloodTypes={bloodTypes}

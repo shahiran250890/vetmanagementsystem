@@ -1,12 +1,10 @@
+import type { ChangeEvent, SelectHTMLAttributes } from 'react';
 import { forwardRef } from 'react';
-import type { SelectHTMLAttributes } from 'react';
 
-import { nativeSelectClassName } from '@/components/form-page-layout';
-import InputError from '@/components/input-error';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { FormDropdown } from '@/components/form-dropdown';
+import type { FormDropdownOption } from '@/components/form-dropdown';
 
-export type SelectOption = { value: string; label: string };
+export type SelectOption = FormDropdownOption;
 
 type Props = SelectHTMLAttributes<HTMLSelectElement> & {
     label: string;
@@ -15,39 +13,40 @@ type Props = SelectHTMLAttributes<HTMLSelectElement> & {
     placeholder?: string;
 };
 
-export const SelectDropdown = forwardRef<HTMLSelectElement, Props>(
-    function SelectDropdown(
-        {
-            label,
-            options,
-            error,
-            id,
-            placeholder = 'Select…',
-            className = '',
-            ...rest
-        },
-        ref,
-    ) {
-        const selectId = id ?? rest.name;
+export const SelectDropdown = forwardRef<HTMLInputElement, Props>(function SelectDropdown(
+    { label, options, error, id, placeholder = 'Select…', className, ...rest },
+    ref,
+) {
+    const selectId = id ?? (typeof rest.name === 'string' ? rest.name : 'select-dropdown');
+    const controlled = rest.value !== undefined;
+    const optionsIncludeEmpty = options.some((o) => o.value === '');
 
-        return (
-            <div className="grid gap-2">
-                <Label htmlFor={selectId}>{label}</Label>
-                <select
-                    ref={ref}
-                    id={selectId}
-                    className={cn(nativeSelectClassName, className)}
-                    {...rest}
-                >
-                    <option value="">{placeholder}</option>
-                    {options.map((o) => (
-                        <option key={o.value} value={o.value}>
-                            {o.label}
-                        </option>
-                    ))}
-                </select>
-                <InputError message={error} />
-            </div>
-        );
-    },
-);
+    return (
+        <FormDropdown
+            ref={ref}
+            id={selectId}
+            name={typeof rest.name === 'string' ? rest.name : selectId}
+            label={label}
+            options={options}
+            allowEmpty={!optionsIncludeEmpty}
+            emptyOptionLabel={placeholder}
+            placeholder={placeholder}
+            error={error}
+            required={Boolean(rest.required)}
+            disabled={Boolean(rest.disabled)}
+            className={className}
+            defaultValue={
+                controlled ? undefined : rest.defaultValue !== undefined ? String(rest.defaultValue) : undefined
+            }
+            value={controlled ? String(rest.value ?? '') : undefined}
+            onValueChange={
+                controlled && rest.onChange
+                    ? (v: string) =>
+                          rest.onChange!({
+                              target: { value: v },
+                          } as ChangeEvent<HTMLSelectElement>)
+                    : undefined
+            }
+        />
+    );
+});

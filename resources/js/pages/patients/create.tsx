@@ -1,9 +1,13 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import type { SubmitEventHandler } from 'react';
+
 import { FormPageContent, formPageSurfaceClassName } from '@/components/form-page-layout';
 import PatientForm from '@/components/patients/patient-form';
+import { createPatientFormSchema } from '@/components/patients/patient-form-schema';
 import { createPatientFormFieldHandler } from '@/hooks/use-patient-form-field-handler';
 import AppLayout from '@/layouts/app-layout';
+import { zodIssuesToDotRecord } from '@/lib/zod-error-map';
 import { create, index, store } from '@/routes/patients';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -11,6 +15,7 @@ import type {
     BloodTypeOption,
     OwnerOption,
     PatientFormData,
+    PatientType,
     SpeciesOption,
 } from '@/types/patient';
 
@@ -62,8 +67,35 @@ export default function CreatePatient({
         },
     });
 
+    const allowedPatientTypes = useMemo((): PatientType[] => {
+        if (allowedPatientType !== null) {
+            return [allowedPatientType];
+        }
+
+        return ['human', 'animal'];
+    }, [allowedPatientType]);
+
+    const schema = useMemo(
+        () => createPatientFormSchema({ allowedPatientTypes }),
+        [allowedPatientTypes],
+    );
+
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+
+    const mergedErrors = useMemo(() => ({ ...errors, ...clientErrors }), [errors, clientErrors]);
+
     const submit: SubmitEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
+
+        const result = schema.safeParse(data);
+
+        if (!result.success) {
+            setClientErrors(zodIssuesToDotRecord(result.error));
+
+            return;
+        }
+
+        setClientErrors({});
         post(store.url());
     };
 
@@ -72,16 +104,12 @@ export default function CreatePatient({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create patient" />
-            <FormPageContent
-                title="Create patient"
-                backHref={index()}
-                backLabel="Back to patients"
-            >
+            <FormPageContent title="Create patient" backHref={index()} backLabel="Back to patients">
                 <form onSubmit={submit} className={formPageSurfaceClassName}>
                     <PatientForm
                         data={data}
                         setData={updateFormData}
-                        errors={errors}
+                        errors={mergedErrors}
                         processing={processing}
                         owners={owners}
                         bloodTypes={bloodTypes}

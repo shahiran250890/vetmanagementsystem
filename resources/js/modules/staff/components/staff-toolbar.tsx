@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
 
+import { FormDropdown } from '@/components/form-dropdown';
 import { FormInput } from '@/components/form-input';
 import { ListPageFilterActions } from '@/components/list-page-filter-actions';
 import { ListPageFilters } from '@/components/list-page-filters';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import usersRoutes from '@/routes/settings/system/users';
 
 import type { StaffFilterOptions, StaffFilters } from '../types';
@@ -74,75 +74,74 @@ export function StaffToolbar({
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="filter-role">Role</Label>
-                        <select
-                            id="filter-role"
-                            className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
-                            value={filters.role_id ?? ''}
-                            onChange={(e) =>
-                                onFiltersChange({
-                                    role_id: e.target.value === '' ? null : Number.parseInt(e.target.value, 10),
-                                })
-                            }
-                        >
-                            <option value="">All roles</option>
-                            {roles.map((r) => (
-                                <option key={r.id} value={r.id}>
-                                    {r.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="filter-dept">Department</Label>
-                        <select
-                            id="filter-dept"
-                            className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
-                            value={filters.department}
-                            onChange={(e) => onFiltersChange({ department: e.target.value })}
-                        >
-                            <option value="">All</option>
-                            {filterOptions.departments.map((d) => (
-                                <option key={d} value={d}>
-                                    {d}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="filter-estatus">Employment status</Label>
-                        <select
-                            id="filter-estatus"
-                            className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
-                            value={filters.employment_status}
-                            onChange={(e) => onFiltersChange({ employment_status: e.target.value })}
-                        >
-                            <option value="">All</option>
-                            <option value="active">Active</option>
-                            <option value="on_leave">On leave</option>
-                            <option value="probation">Probation</option>
-                            <option value="suspended">Suspended</option>
-                            <option value="resigned">Resigned</option>
-                            <option value="terminated">Terminated</option>
-                        </select>
-                    </div>
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="filter-clinic">Clinic</Label>
-                        <select
-                            id="filter-clinic"
-                            className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
-                            value={filters.clinic}
-                            onChange={(e) => onFiltersChange({ clinic: e.target.value })}
-                        >
-                            <option value="">All</option>
-                            {filterOptions.clinics.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <FormDropdown
+                        id="filter-role"
+                        name="filter_role"
+                        label="Role"
+                        options={roles.map((r) => ({
+                            value: String(r.id),
+                            label: r.name,
+                        }))}
+                        value={filters.role_id === null ? '' : String(filters.role_id)}
+                        onValueChange={(v) =>
+                            onFiltersChange({
+                                role_id: v === '' ? null : Number.parseInt(v, 10),
+                            })
+                        }
+                        allowEmpty
+                        emptyOptionLabel="All roles"
+                        placeholder="All roles"
+                        className="gap-1.5"
+                    />
+                    <FormDropdown
+                        id="filter-dept"
+                        name="filter_department"
+                        label="Department"
+                        options={filterOptions.departments.map((d) => ({
+                            value: d,
+                            label: d,
+                        }))}
+                        value={filters.department}
+                        onValueChange={(v) => onFiltersChange({ department: v })}
+                        allowEmpty
+                        emptyOptionLabel="All"
+                        placeholder="All"
+                        className="gap-1.5"
+                    />
+                    <FormDropdown
+                        id="filter-estatus"
+                        name="filter_employment_status"
+                        label="Employment status"
+                        options={[
+                            { value: 'active', label: 'Active' },
+                            { value: 'on_leave', label: 'On leave' },
+                            { value: 'probation', label: 'Probation' },
+                            { value: 'suspended', label: 'Suspended' },
+                            { value: 'resigned', label: 'Resigned' },
+                            { value: 'terminated', label: 'Terminated' },
+                        ]}
+                        value={filters.employment_status}
+                        onValueChange={(v) => onFiltersChange({ employment_status: v })}
+                        allowEmpty
+                        emptyOptionLabel="All"
+                        placeholder="All"
+                        className="gap-1.5"
+                    />
+                    <FormDropdown
+                        id="filter-clinic"
+                        name="filter_clinic"
+                        label="Clinic"
+                        options={filterOptions.clinics.map((c) => ({
+                            value: c,
+                            label: c,
+                        }))}
+                        value={filters.clinic}
+                        onValueChange={(v) => onFiltersChange({ clinic: v })}
+                        allowEmpty
+                        emptyOptionLabel="All"
+                        placeholder="All"
+                        className="gap-1.5"
+                    />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">

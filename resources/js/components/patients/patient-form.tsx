@@ -1,8 +1,7 @@
-import {
-    formPageInsetSectionClassName,
-    nativeSelectClassName,
-    nativeTextareaClassName,
-} from '@/components/form-page-layout';
+import { useMemo } from 'react';
+
+import { FormDropdown } from '@/components/form-dropdown';
+import { formPageInsetSectionClassName, nativeTextareaClassName } from '@/components/form-page-layout';
 import { GenderSelection } from '@/components/gender-selection';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -48,23 +47,35 @@ export default function PatientForm({
     );
     const breedOptions = selectedSpecies?.breeds ?? [];
 
+    const patientTypeOptions = useMemo(() => {
+        const opts: { value: string; label: string }[] = [];
+
+        if (allowedPatientType === null || allowedPatientType === 'animal') {
+            opts.push({ value: 'animal', label: 'Animal' });
+        }
+
+        if (allowedPatientType === null || allowedPatientType === 'human') {
+            opts.push({ value: 'human', label: 'Human' });
+        }
+
+        return opts;
+    }, [allowedPatientType]);
+
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2">
-                    <Label htmlFor="patient_type">Patient type</Label>
-                    <select
+                    <FormDropdown
                         id="patient_type"
-                        className={nativeSelectClassName}
+                        name="patient_type"
+                        label="Patient type"
+                        options={patientTypeOptions}
                         value={data.patient_type}
+                        onValueChange={(v) => setData('patient_type', v as PatientType)}
+                        allowEmpty={false}
+                        placeholder="Search…"
                         disabled={allowedPatientType !== null}
-                        onChange={(event) =>
-                            setData('patient_type', event.target.value as PatientType)
-                        }
-                    >
-                        {(allowedPatientType === null || allowedPatientType === 'animal') && <option value="animal">Animal</option>}
-                        {(allowedPatientType === null || allowedPatientType === 'human') && <option value="human">Human</option>}
-                    </select>
+                    />
                     {allowedPatientType !== null && (
                         <p className="text-xs text-muted-foreground">
                             Patient type is locked by organization clinic type.
@@ -86,7 +97,6 @@ export default function PatientForm({
                 <GenderSelection
                     id="sex"
                     name="sex"
-                    label="Sex"
                     value={data.sex}
                     onChange={(value) => setData('sex', value)}
                     error={errors.sex}
@@ -105,19 +115,20 @@ export default function PatientForm({
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="status">Status</Label>
-                    <select
+                    <FormDropdown
                         id="status"
-                        className={nativeSelectClassName}
+                        name="status"
+                        label="Status"
+                        options={[
+                            { value: 'active', label: 'Active' },
+                            { value: 'deceased', label: 'Deceased' },
+                            { value: 'transferred', label: 'Transferred' },
+                        ]}
                         value={data.status}
-                        onChange={(event) =>
-                            setData('status', event.target.value)
-                        }
-                    >
-                        <option value="active">Active</option>
-                        <option value="deceased">Deceased</option>
-                        <option value="transferred">Transferred</option>
-                    </select>
+                        onValueChange={(v) => setData('status', v)}
+                        allowEmpty={false}
+                        placeholder="Search…"
+                    />
                     <InputError message={errors.status} />
                 </div>
 
@@ -159,63 +170,58 @@ export default function PatientForm({
                         Animal profile
                     </h3>
                     <div className="grid gap-2">
-                        <Label htmlFor="owner_user_id">Owner</Label>
-                        <select
+                        <FormDropdown
                             id="owner_user_id"
-                            className={nativeSelectClassName}
+                            name="animal_profile.owner_user_id"
+                            label="Owner"
+                            options={owners.map((owner) => ({
+                                value: String(owner.id),
+                                label: owner.name,
+                            }))}
                             value={data.animal_profile.owner_user_id}
-                            onChange={(event) =>
-                                setData('animal_profile.owner_user_id', event.target.value)
-                            }
-                        >
-                            <option value="">Unassigned</option>
-                            {owners.map((owner) => (
-                                <option key={owner.id} value={String(owner.id)}>
-                                    {owner.name}
-                                </option>
-                            ))}
-                        </select>
+                            onValueChange={(v) => setData('animal_profile.owner_user_id', v)}
+                            allowEmpty
+                            emptyOptionLabel="Unassigned"
+                            placeholder="Unassigned"
+                        />
                         <InputError message={errors['animal_profile.owner_user_id']} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="species">Species</Label>
-                        <select
+                        <FormDropdown
                             id="species"
-                            className={nativeSelectClassName}
+                            name="animal_profile.species"
+                            label="Species"
+                            options={speciesOptions.map((species) => ({
+                                value: species.name,
+                                label: species.name,
+                            }))}
                             value={data.animal_profile.species}
-                            onChange={(event) => {
-                                    setData('animal_profile.species', event.target.value);
-                                    setData('animal_profile.breed', '');
-                                }
-                            }
-                        >
-                            <option value="">Please select</option>
-                            {speciesOptions.map((species) => (
-                                <option key={species.id} value={species.name}>
-                                    {species.name}
-                                </option>
-                            ))}
-                        </select>
+                            onValueChange={(v) => {
+                                setData('animal_profile.species', v);
+                                setData('animal_profile.breed', '');
+                            }}
+                            allowEmpty
+                            emptyOptionLabel="Please select"
+                            placeholder="Please select"
+                        />
                         <InputError message={errors['animal_profile.species']} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="breed">Breed</Label>
-                        <select
+                        <FormDropdown
                             id="breed"
-                            className={nativeSelectClassName}
+                            name="animal_profile.breed"
+                            label="Breed"
+                            options={breedOptions.map((breed) => ({
+                                value: breed.name,
+                                label: breed.name,
+                            }))}
                             value={data.animal_profile.breed}
+                            onValueChange={(v) => setData('animal_profile.breed', v)}
+                            allowEmpty
+                            emptyOptionLabel="Please select"
+                            placeholder="Please select"
                             disabled={data.animal_profile.species === ''}
-                            onChange={(event) =>
-                                setData('animal_profile.breed', event.target.value)
-                            }
-                        >
-                            <option value="">Please select</option>
-                            {breedOptions.map((breed) => (
-                                <option key={breed.id} value={breed.name}>
-                                    {breed.name}
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="color">Color</Label>
@@ -283,25 +289,20 @@ export default function PatientForm({
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="blood_type">Blood type</Label>
-                        <select
+                        <FormDropdown
                             id="blood_type"
-                            className={nativeSelectClassName}
+                            name="human_profile.blood_type_id"
+                            label="Blood type"
+                            options={bloodTypes.map((bloodType) => ({
+                                value: String(bloodType.id),
+                                label: bloodType.name,
+                            }))}
                             value={data.human_profile.blood_type_id}
-                            onChange={(event) =>
-                                setData(
-                                    'human_profile.blood_type_id',
-                                    event.target.value,
-                                )
-                            }
-                        >
-                            <option value="">Please select</option>
-                            {bloodTypes.map((bloodType) => (
-                                <option key={bloodType.id} value={String(bloodType.id)}>
-                                    {bloodType.name}
-                                </option>
-                            ))}
-                        </select>
+                            onValueChange={(v) => setData('human_profile.blood_type_id', v)}
+                            allowEmpty
+                            emptyOptionLabel="Please select"
+                            placeholder="Please select"
+                        />
                         <InputError message={errors['human_profile.blood_type_id']} />
                     </div>
                     <div className="grid gap-2">

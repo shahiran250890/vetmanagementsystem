@@ -1,4 +1,5 @@
 import { Form, Link, router } from '@inertiajs/react';
+import { FormDropdown } from '@/components/form-dropdown';
 import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -31,12 +32,25 @@ export default function BreedsIndex({ breeds, speciesOptions, editingBreed, form
                             {({ errors, processing }) => (
                                 <>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="species_id">Species</Label>
-                                        <select id="species_id" name="species_id" className="rounded border px-3 py-2" defaultValue={editingBreed?.species_id ?? ''}>
-                                            <option value="">Select species</option>
-                                            {speciesOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
-                                        </select>
-                                        <InputError message={errors.species_id} />
+                                        <FormDropdown
+                                            id="species_id"
+                                            name="species_id"
+                                            label="Species"
+                                            options={speciesOptions.map((option) => ({
+                                                value: String(option.id),
+                                                label: option.name,
+                                            }))}
+                                            defaultValue={
+                                                editingBreed?.species_id !== undefined
+                                                    ? String(editingBreed.species_id)
+                                                    : ''
+                                            }
+                                            allowEmpty
+                                            emptyOptionLabel="Select species"
+                                            placeholder="Select species"
+                                            error={errors.species_id}
+                                            resetKey={editingBreed?.id ?? 'create'}
+                                        />
                                     </div>
                                     <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={editingBreed?.name} /><InputError message={errors.name} /></div>
                                     <div className="grid gap-2"><Label htmlFor="code">Code</Label><Input id="code" name="code" defaultValue={editingBreed?.code} /><InputError message={errors.code} /></div>

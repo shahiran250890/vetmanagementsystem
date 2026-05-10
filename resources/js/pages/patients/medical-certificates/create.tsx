@@ -1,19 +1,16 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { SubmitEventHandler } from 'react';
 
-import {
-    formPageSurfaceClassName,
-    nativeSelectClassName,
-    nativeTextareaClassName,
-} from '@/components/form-page-layout';
+import { FormDropdown } from '@/components/form-dropdown';
+import { formPageSurfaceClassName, nativeTextareaClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import medicalCertificateRoutes from '@/routes/patients/medical-certificates';
 import { index as patientsIndex, show as showPatient } from '@/routes/patients';
+import medicalCertificateRoutes from '@/routes/patients/medical-certificates';
 import type { BreadcrumbItem, PatientRecord } from '@/types';
 
 type MedicalRecordOption = {
@@ -76,23 +73,30 @@ export default function CreateMedicalCertificate({
 
                 <form onSubmit={submit} className={cn(formPageSurfaceClassName, 'space-y-4')}>
                     <div className="grid gap-2">
-                        <Label htmlFor="medical_record_id">Linked visit (optional)</Label>
-                        <select
+                        <FormDropdown
                             id="medical_record_id"
-                            className={nativeSelectClassName}
-                            value={form.data.medical_record_id === '' ? '' : String(form.data.medical_record_id)}
-                            onChange={(event) =>
-                                form.setData('medical_record_id', event.target.value === '' ? '' : Number(event.target.value))
+                            name="medical_record_id"
+                            label="Linked visit (optional)"
+                            options={medicalRecordOptions.map((option) => ({
+                                value: String(option.id),
+                                label: option.label,
+                            }))}
+                            value={
+                                form.data.medical_record_id === ''
+                                    ? ''
+                                    : String(form.data.medical_record_id)
                             }
-                        >
-                            <option value="">None</option>
-                            {medicalRecordOptions.map((option) => (
-                                <option key={option.id} value={option.id}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={form.errors.medical_record_id} />
+                            onValueChange={(v) =>
+                                form.setData(
+                                    'medical_record_id',
+                                    v === '' ? '' : Number.parseInt(v, 10),
+                                )
+                            }
+                            allowEmpty
+                            emptyOptionLabel="None"
+                            placeholder="None"
+                            error={form.errors.medical_record_id}
+                        />
                     </div>
 
                     <div className="grid gap-2">

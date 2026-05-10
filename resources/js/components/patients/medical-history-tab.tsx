@@ -1,7 +1,7 @@
 import { Download, Printer, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { nativeSelectClassName } from '@/components/form-page-layout';
+import { FormDropdown } from '@/components/form-dropdown';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -178,40 +178,41 @@ export default function MedicalHistoryTab({ patient }: { patient: Patient }) {
                             }
                         />
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="history-doctor">Doctor</Label>
-                        <select
-                            id="history-doctor"
-                            className={nativeSelectClassName}
-                            value={doctor}
-                            onChange={(event) =>
-                                updateFilter(() => setDoctor(event.target.value))
-                            }
-                        >
-                            <option value="all">All doctors</option>
-                            {doctorOptions.map((option) => (
-                                <option key={option} value={option}>
-                                    {option}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="grid gap-2 md:col-start-2 xl:col-start-auto">
-                        <Label htmlFor="history-status">Status</Label>
-                        <select
+                    <FormDropdown
+                        id="history-doctor"
+                        name="history_doctor"
+                        label="Doctor"
+                        options={[
+                            { value: 'all', label: 'All doctors' },
+                            ...doctorOptions.map((option) => ({
+                                value: option,
+                                label: option,
+                            })),
+                        ]}
+                        value={doctor}
+                        onValueChange={(v) => updateFilter(() => setDoctor(v))}
+                        allowEmpty={false}
+                        placeholder="Search…"
+                        className="gap-2"
+                    />
+                    <div className="md:col-start-2 xl:col-start-auto">
+                        <FormDropdown
                             id="history-status"
-                            className={nativeSelectClassName}
+                            name="history_status"
+                            label="Status"
+                            options={[
+                                { value: 'all', label: 'All statuses' },
+                                { value: 'waiting', label: 'Waiting' },
+                                { value: 'in_progress', label: 'In progress' },
+                                { value: 'completed', label: 'Completed' },
+                                { value: 'cancelled', label: 'Cancelled' },
+                            ]}
                             value={status}
-                            onChange={(event) =>
-                                updateFilter(() => setStatus(event.target.value))
-                            }
-                        >
-                            <option value="all">All statuses</option>
-                            <option value="waiting">Waiting</option>
-                            <option value="in_progress">In progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                            onValueChange={(v) => updateFilter(() => setStatus(v))}
+                            allowEmpty={false}
+                            placeholder="Search…"
+                            className="gap-2"
+                        />
                     </div>
                 </CardContent>
             </Card>

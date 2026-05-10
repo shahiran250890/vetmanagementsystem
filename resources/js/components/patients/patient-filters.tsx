@@ -1,3 +1,4 @@
+import { FormDropdown } from '@/components/form-dropdown';
 import { ListPageFilterActions } from '@/components/list-page-filter-actions';
 import { ListPageFilters } from '@/components/list-page-filters';
 import { Input } from '@/components/ui/input';
@@ -33,20 +34,22 @@ export default function PatientFilters({
                     />
                 </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor="patient-status">Status</Label>
-                    <select
-                        id="patient-status"
-                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                        value={status}
-                        onChange={(event) => onStatusChange(event.target.value)}
-                    >
-                        <option value="">All statuses</option>
-                        <option value="active">Active</option>
-                        <option value="deceased">Deceased</option>
-                        <option value="transferred">Transferred</option>
-                    </select>
-                </div>
+                <FormDropdown
+                    id="patient-status"
+                    name="patient_status_filter"
+                    label="Status"
+                    options={[
+                        { value: '', label: 'All statuses' },
+                        { value: 'active', label: 'Active' },
+                        { value: 'deceased', label: 'Deceased' },
+                        { value: 'transferred', label: 'Transferred' },
+                    ]}
+                    value={status}
+                    onValueChange={onStatusChange}
+                    allowEmpty={false}
+                    placeholder="All statuses"
+                    className="gap-2"
+                />
 
                 <ListPageFilterActions onApply={onApply} onReset={onReset} />
             </div>

@@ -26,12 +26,63 @@ function minimalStaffPayload(array $overrides = []): array
     return array_merge([
         'staff_number_source' => 'auto',
         'full_name' => 'Store Test Staff',
+        'nric_passport' => '901010-10-1010',
+        'gender' => '1',
+        'date_of_birth' => '1990-01-01',
+        'nationality' => 'Malaysia',
+        'mobile_number' => '0123456789',
+        'email' => 'store-test-staff@example.com',
         'employment_status' => 'active',
         'is_active' => '1',
         'enable_login' => '0',
         'is_enabled' => '0',
     ], $overrides);
 }
+
+test('creating staff without mobile_number returns server validation for mobile_number', function (): void {
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(Permission::query()->create([
+        'name' => 'create user',
+        'guard_name' => 'web',
+    ]));
+
+    $response = $this->actingAs($actor)->post(
+        route('settings.system.users.store'),
+        minimalStaffPayload(['mobile_number' => '']),
+    );
+
+    $response->assertSessionHasErrors('mobile_number');
+});
+
+test('creating staff without work email returns server validation for email', function (): void {
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(Permission::query()->create([
+        'name' => 'create user',
+        'guard_name' => 'web',
+    ]));
+
+    $response = $this->actingAs($actor)->post(
+        route('settings.system.users.store'),
+        minimalStaffPayload(['email' => '']),
+    );
+
+    $response->assertSessionHasErrors('email');
+});
+
+test('creating staff without nric_passport returns server validation for nric_passport', function (): void {
+    $actor = User::factory()->create();
+    $actor->givePermissionTo(Permission::query()->create([
+        'name' => 'create user',
+        'guard_name' => 'web',
+    ]));
+
+    $response = $this->actingAs($actor)->post(
+        route('settings.system.users.store'),
+        minimalStaffPayload(['nric_passport' => '']),
+    );
+
+    $response->assertSessionHasErrors('nric_passport');
+});
 
 test('creating staff without full_name returns server validation for full_name', function (): void {
     $actor = User::factory()->create();

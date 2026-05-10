@@ -73,16 +73,16 @@ class StaffManagementRequest extends FormRequest
             ],
             'full_name' => ['required', 'string', 'max:255'],
             'preferred_name' => ['nullable', 'string', 'max:255'],
-            'nric_passport' => ['nullable', 'string', 'max:64'],
-            'gender' => ['nullable', 'string', Rule::in(['1', '2'])],
-            'date_of_birth' => ['nullable', 'date'],
-            'nationality' => ['nullable', 'string', 'max:120'],
+            'nric_passport' => ['required', 'string', 'max:64'],
+            'gender' => ['required', 'string', Rule::in(['1', '2'])],
+            'date_of_birth' => ['required', 'date'],
+            'nationality' => ['required', 'string', 'max:120'],
             'marital_status' => ['nullable', 'string', 'max:32'],
             'photo_path' => ['nullable', 'string', 'max:2048'],
 
-            'mobile_number' => ['nullable', 'string', 'max:32'],
+            'mobile_number' => ['required', 'string', 'max:32'],
             'alternate_phone' => ['nullable', 'string', 'max:32'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:120'],
@@ -147,6 +147,21 @@ class StaffManagementRequest extends FormRequest
             ],
             'role_ids' => ['nullable', 'array'],
             'role_ids.*' => ['integer', 'exists:roles,id'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'nric_passport' => 'NRIC / passport',
+            'date_of_birth' => 'date of birth',
+            'nationality' => 'nationality',
+            'gender' => 'gender',
+            'mobile_number' => 'mobile number',
+            'email' => 'work / contact email',
         ];
     }
 

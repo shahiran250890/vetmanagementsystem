@@ -7,10 +7,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 
-import {
-    nativeSelectClassName,
-    nativeTextareaClassName,
-} from '@/components/form-page-layout';
+import { FormDropdown } from '@/components/form-dropdown';
+import { nativeTextareaClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -122,42 +120,47 @@ export default function NewMedicalRecordTab({
                             }
                         />
                     </Field>
-                    <Field label="Visit Type" htmlFor="visit_type">
-                        <select
+                    <div className="grid gap-2">
+                        <FormDropdown
                             id="visit_type"
-                            className={nativeSelectClassName}
+                            name="visit_type"
+                            label="Visit Type"
+                            options={[
+                                { value: 'consultation', label: 'Consultation' },
+                                { value: 'vaccination', label: 'Vaccination' },
+                                { value: 'surgery', label: 'Surgery' },
+                                { value: 'emergency', label: 'Emergency' },
+                                {
+                                    value: 'grooming_medical_check',
+                                    label: 'Grooming medical check',
+                                },
+                                { value: 'follow_up', label: 'Follow-up' },
+                            ]}
                             value={data.visit_type}
-                            onChange={(event) =>
-                                onSetData('visit_type', event.target.value)
-                            }
-                        >
-                            <option value="consultation">Consultation</option>
-                            <option value="vaccination">Vaccination</option>
-                            <option value="surgery">Surgery</option>
-                            <option value="emergency">Emergency</option>
-                            <option value="grooming_medical_check">
-                                Grooming medical check
-                            </option>
-                            <option value="follow_up">Follow-up</option>
-                        </select>
-                        <InputError message={errors.visit_type} />
-                    </Field>
-                    <Field label="Status" htmlFor="visit_status">
-                        <select
+                            onValueChange={(v) => onSetData('visit_type', v)}
+                            allowEmpty={false}
+                            placeholder="Search…"
+                            error={errors.visit_type}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <FormDropdown
                             id="visit_status"
-                            className={nativeSelectClassName}
+                            name="visit_status"
+                            label="Status"
+                            options={[
+                                { value: 'waiting', label: 'Waiting' },
+                                { value: 'in_progress', label: 'In Progress' },
+                                { value: 'completed', label: 'Completed' },
+                                { value: 'cancelled', label: 'Cancelled' },
+                            ]}
                             value={data.visit_status}
-                            onChange={(event) =>
-                                onSetData('visit_status', event.target.value)
-                            }
-                        >
-                            <option value="waiting">Waiting</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                        <InputError message={errors.visit_status} />
-                    </Field>
+                            onValueChange={(v) => onSetData('visit_status', v)}
+                            allowEmpty={false}
+                            placeholder="Search…"
+                            error={errors.visit_status}
+                        />
+                    </div>
                     <Field label="Appointment ID (optional)" htmlFor="appointment_id">
                         <Input
                             id="appointment_id"

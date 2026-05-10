@@ -1,7 +1,8 @@
 import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 
+import { FormDropdown } from '@/components/form-dropdown';
 import { LIST_PAGE_SIZE_OPTIONS } from '@/lib/list-query';
 import { cn } from '@/lib/utils';
 
@@ -75,6 +76,7 @@ export function DataTable<T>({
     serverPagination,
     className,
 }: Props<T>) {
+    const pageSizeControlId = useId();
     const isServer = serverPagination !== undefined;
 
     const [clientPageSize, setClientPageSize] = useState(() => {
@@ -185,33 +187,30 @@ export function DataTable<T>({
             )}
             <div className="flex flex-wrap items-center justify-end gap-3">
                 {showPageSizeControl ? (
-                    <label className="text-foreground flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground whitespace-nowrap">
-                            Rows per page
-                        </span>
-                        <select
-                            className="border-border bg-background text-foreground focus-visible:ring-ring rounded-md border px-2 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
-                            value={pageSize}
-                            aria-label="Rows per page"
-                            onChange={(e) => {
-                                const next = Number.parseInt(e.target.value, 10);
+                    <FormDropdown
+                        id={pageSizeControlId}
+                        name={`table_page_size_${pageSizeControlId}`}
+                        label="Rows per page"
+                        options={pageSizeOptions.map((opt) => ({
+                            value: String(opt),
+                            label: String(opt),
+                        }))}
+                        value={String(pageSize)}
+                        onValueChange={(v) => {
+                            const next = Number.parseInt(v, 10);
 
-                                if (isServer) {
-                                    serverPagination.onPageSizeChange?.(next);
+                            if (isServer) {
+                                serverPagination.onPageSizeChange?.(next);
 
-                                    return;
-                                }
+                                return;
+                            }
 
-                                onClientPageSizeChange(next);
-                            }}
-                        >
-                            {pageSizeOptions.map((opt) => (
-                                <option key={opt} value={opt}>
-                                    {opt}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                            onClientPageSizeChange(next);
+                        }}
+                        allowEmpty={false}
+                        placeholder="Search…"
+                        className="w-[min(100%,12rem)] gap-1.5 [&_label]:text-muted-foreground [&_label]:text-sm"
+                    />
                 ) : null}
                 {shouldPaginate ? (
                     <nav

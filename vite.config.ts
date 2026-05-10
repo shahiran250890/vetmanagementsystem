@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
@@ -9,6 +11,10 @@ import path from 'path';
 const phpBinary = process.env.PHP_BINARY || 'php';
 
 export default defineConfig({
+    test: {
+        environment: 'node',
+        include: ['resources/js/**/*.test.ts'],
+    },
     /*
      * Herd/Valet TLS auto-detection can make the dev server HTTPS on *.test while you
      * browse the site over HTTP — scripts then fail to load. IPv6 [::1] in public/hot is

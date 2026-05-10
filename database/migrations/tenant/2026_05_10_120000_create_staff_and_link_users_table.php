@@ -18,10 +18,10 @@ return new class extends Migration
             $table->string('full_name');
             $table->string('preferred_name')->nullable();
             $table->string('nric_passport', 64)->nullable();
-            $table->char('gender', 2)->nullable();
+            $table->char('gender', 2)->nullable()->comment('Staff form: 1=Male, 2=Female');
             $table->date('date_of_birth')->nullable();
-            $table->string('nationality', 120)->nullable();
-            $table->string('marital_status', 32)->nullable();
+            $table->string('nationality', 120)->nullable()->comment('Label from tenant nationalities.name; NationalitySelect value');
+            $table->string('marital_status', 32)->nullable()->comment('Staff form: single, married; legacy free-text allowed');
             $table->string('photo_path', 2048)->nullable();
 
             $table->string('mobile_number', 32)->nullable();

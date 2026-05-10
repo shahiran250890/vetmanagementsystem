@@ -1,15 +1,14 @@
-import type { ChangeEvent } from 'react';
+import { useMemo } from 'react';
 
-import { nativeSelectClassName } from '@/components/form-page-layout';
-import InputError from '@/components/input-error';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { FormDropdown } from '@/components/form-dropdown';
 
 export type GenderSelectionProps = {
     id: string;
     name: string;
-    /** Defaults to "Sex" (matches patient forms). */
+    /** Defaults to "Gender". */
     label?: string;
+    /** Marks the field required for assistive tech (native submit validation). */
+    required?: boolean;
     error?: string;
     className?: string;
     disabled?: boolean;
@@ -18,41 +17,48 @@ export type GenderSelectionProps = {
     onChange?: (value: string) => void;
     /** Used when `value` is undefined (native form submit). */
     defaultValue?: string;
+    resetKey?: string | number;
 };
+
+const OPTIONS = [
+    { value: '1', label: 'Male' },
+    { value: '2', label: 'Female' },
+];
 
 export function GenderSelection({
     id,
     name,
-    label = 'Sex',
+    label = 'Gender',
+    required = false,
     error,
     className,
     disabled,
     value,
     onChange,
     defaultValue,
+    resetKey,
 }: GenderSelectionProps) {
     const controlled = value !== undefined;
 
+    const options = useMemo(() => OPTIONS, []);
+
     return (
-        <div className="grid gap-2">
-            <Label htmlFor={id}>{label}</Label>
-            <select
-                id={id}
-                name={name}
-                className={cn(nativeSelectClassName, className)}
-                disabled={disabled}
-                {...(controlled
-                    ? {
-                          value,
-                          onChange: (event: ChangeEvent<HTMLSelectElement>) => onChange?.(event.target.value),
-                      }
-                    : { defaultValue: defaultValue ?? '' })}
-            >
-                <option value="">Please select</option>
-                <option value="1">Male</option>
-                <option value="2">Female</option>
-            </select>
-            <InputError message={error} />
-        </div>
+        <FormDropdown
+            id={id}
+            name={name}
+            label={label}
+            options={options}
+            allowEmpty
+            emptyOptionLabel="Please select"
+            placeholder="Please select"
+            required={required}
+            disabled={disabled}
+            error={error}
+            className={className}
+            defaultValue={controlled ? undefined : defaultValue ?? ''}
+            value={controlled ? value : undefined}
+            onValueChange={controlled ? onChange : undefined}
+            resetKey={resetKey}
+        />
     );
 }

@@ -34,6 +34,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 - **vetms-ui-conventions** — ACTIVATE when adding or renaming `resources/js` pages, layouts, components, hooks, or services; when wiring `Inertia::render` page names; or when choosing layout shells (`AppLayout`, settings, auth) and component folders. Read `.cursor/skills/vetms-ui-conventions/SKILL.md`.
+- **component-reuse-and-zod-validation** — ACTIVATE when building or refactoring forms, fields, modals, or UI that collects input; when adding Zod schemas, `react-hook-form`, or inline validation. Read `.cursor/skills/component-reuse-and-zod-validation/SKILL.md`.
 
 ## Conventions
 

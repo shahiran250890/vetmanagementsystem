@@ -1,8 +1,11 @@
 import { useState } from 'react';
 
+import type { NationalityOption } from '@/components/address-fields';
 import { FormInput } from '@/components/form-input';
 import { GenderSelection } from '@/components/gender-selection';
 import InputError from '@/components/input-error';
+import { MaritalStatusSelect } from '@/components/marital-status-select';
+import { NationalitySelect } from '@/components/nationality-select';
 import { normalizeGenderSelectValue } from '@/lib/gender-selection';
 
 import type { StaffMember } from '../types';
@@ -11,10 +14,12 @@ export function PersonalInformationSection({
     managedStaff,
     errors,
     isEdit,
+    nationalities,
 }: {
     managedStaff?: StaffMember;
     errors: Record<string, string>;
     isEdit: boolean;
+    nationalities: NationalityOption[];
 }) {
     const [staffNumberSource, setStaffNumberSource] = useState<'auto' | 'manual'>('auto');
 
@@ -39,22 +44,49 @@ export function PersonalInformationSection({
                     error={errors.full_name}
                 />
                 <FormInput label="Preferred name" name="preferred_name" defaultValue={managedStaff?.preferred_name ?? ''} />
-                <FormInput label="NRIC / Passport" name="nric_passport" defaultValue={managedStaff?.nric_passport ?? ''} />
+                <FormInput
+                    label="NRIC / Passport *"
+                    name="nric_passport"
+                    required
+                    aria-required="true"
+                    defaultValue={managedStaff?.nric_passport ?? ''}
+                    error={errors.nric_passport}
+                />
                 <GenderSelection
                     id="gender"
                     name="gender"
-                    label="Sex"
+                    label="Gender *"
+                    required
                     defaultValue={normalizeGenderSelectValue(managedStaff?.gender)}
                     error={errors.gender}
+                    resetKey={managedStaff?.id ?? 'create'}
                 />
                 <FormInput
-                    label="Date of birth"
+                    label="Date of birth *"
                     name="date_of_birth"
                     type="date"
+                    required
+                    aria-required="true"
                     defaultValue={managedStaff?.date_of_birth ?? ''}
+                    error={errors.date_of_birth}
                 />
-                <FormInput label="Nationality" name="nationality" defaultValue={managedStaff?.nationality ?? ''} />
-                <FormInput label="Marital status" name="marital_status" defaultValue={managedStaff?.marital_status ?? ''} />
+                <NationalitySelect
+                    id="nationality"
+                    name="nationality"
+                    label="Nationality *"
+                    required
+                    nationalities={nationalities}
+                    defaultValue={managedStaff?.nationality}
+                    error={errors.nationality}
+                    resetKey={managedStaff?.id ?? 'create'}
+                />
+                <MaritalStatusSelect
+                    id="marital_status"
+                    name="marital_status"
+                    defaultValue={managedStaff?.marital_status}
+                    error={errors.marital_status}
+                    resetKey={managedStaff?.id ?? 'create'}
+                />
                 <div className="space-y-1 sm:col-span-2">
                     <FormInput
                         label="Photo URL"
@@ -126,22 +158,49 @@ export function PersonalInformationSection({
                 error={errors.full_name}
             />
             <FormInput label="Preferred name" name="preferred_name" defaultValue={managedStaff?.preferred_name ?? ''} />
-            <FormInput label="NRIC / Passport" name="nric_passport" defaultValue={managedStaff?.nric_passport ?? ''} />
+            <FormInput
+                label="NRIC / Passport *"
+                name="nric_passport"
+                required
+                aria-required="true"
+                defaultValue={managedStaff?.nric_passport ?? ''}
+                error={errors.nric_passport}
+            />
             <GenderSelection
                 id="gender"
                 name="gender"
-                label="Sex"
+                label="Gender *"
+                required
                 defaultValue={normalizeGenderSelectValue(managedStaff?.gender)}
                 error={errors.gender}
+                resetKey={managedStaff?.id ?? 'create'}
             />
             <FormInput
-                label="Date of birth"
+                label="Date of birth *"
                 name="date_of_birth"
                 type="date"
+                required
+                aria-required="true"
                 defaultValue={managedStaff?.date_of_birth ?? ''}
+                error={errors.date_of_birth}
             />
-            <FormInput label="Nationality" name="nationality" defaultValue={managedStaff?.nationality ?? ''} />
-            <FormInput label="Marital status" name="marital_status" defaultValue={managedStaff?.marital_status ?? ''} />
+            <NationalitySelect
+                id="nationality"
+                name="nationality"
+                label="Nationality *"
+                required
+                nationalities={nationalities}
+                defaultValue={managedStaff?.nationality}
+                error={errors.nationality}
+                resetKey={managedStaff?.id ?? 'create'}
+            />
+            <MaritalStatusSelect
+                id="marital_status"
+                name="marital_status"
+                defaultValue={managedStaff?.marital_status}
+                error={errors.marital_status}
+                resetKey={managedStaff?.id ?? 'create'}
+            />
             <div className="space-y-1 sm:col-span-2">
                 <FormInput
                     label="Photo URL"
