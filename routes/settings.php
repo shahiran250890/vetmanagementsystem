@@ -6,8 +6,8 @@ use App\Modules\Settings\Http\Controllers\ProfileController;
 use App\Modules\Settings\Http\Controllers\RoleController;
 use App\Modules\Settings\Http\Controllers\SecurityController;
 use App\Modules\Settings\Http\Controllers\SpeciesController;
+use App\Modules\Settings\Http\Controllers\StaffManagementController;
 use App\Modules\Settings\Http\Controllers\SystemSettingController;
-use App\Modules\Settings\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -30,12 +30,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('settings/system')->name('settings.system.')->group(function (): void {
         Route::inertia('/', 'settings/system/index')->name('index');
-        Route::patch('users/{managed_user}/status', [UserManagementController::class, 'toggleStatus'])
+        Route::get('users/export/csv', [StaffManagementController::class, 'exportCsv'])
+            ->name('users.export.csv');
+        Route::get('users/export/pdf', [StaffManagementController::class, 'exportPdf'])
+            ->name('users.export.pdf');
+        Route::post('users/bulk-status', [StaffManagementController::class, 'bulkStatus'])
+            ->name('users.bulk-status');
+        Route::post('users/bulk-roles', [StaffManagementController::class, 'bulkRoles'])
+            ->name('users.bulk-roles');
+        Route::patch('users/{managed_staff}/status', [StaffManagementController::class, 'toggleStatus'])
             ->name('users.toggle-status');
         Route::resource('system-settings', SystemSettingController::class)
             ->except(['show']);
-        Route::resource('users', UserManagementController::class)
-            ->parameters(['users' => 'managed_user']);
+        Route::resource('users', StaffManagementController::class)
+            ->parameters(['users' => 'managed_staff']);
         Route::resource('species', SpeciesController::class);
         Route::resource('roles', RoleController::class);
         Route::resource('permissions', PermissionController::class);

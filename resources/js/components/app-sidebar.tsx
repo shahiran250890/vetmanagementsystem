@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
+
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -10,18 +11,25 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { isNavItemVisible, mainNav } from '@/config/main-nav';
+import { filterNavItemsByAuth, getMainNavItems } from '@/config/main-nav';
 import { useAuthRoles } from '@/hooks/use-auth-roles';
 import { dashboard } from '@/routes';
+
 export function AppSidebar() {
     const { roles, permissions } = useAuthRoles();
+    const { organizationClinicType } = usePage().props as {
+        organizationClinicType?: 'vet' | 'human' | null;
+    };
 
     const visibleMainNav = useMemo(
         () =>
-            mainNav.filter((item) =>
-                isNavItemVisible(item, roles, permissions),
+            filterNavItemsByAuth(
+                getMainNavItems(),
+                roles,
+                permissions,
+                organizationClinicType ?? null,
             ),
-        [roles, permissions],
+        [roles, permissions, organizationClinicType],
     );
 
     return (
@@ -29,7 +37,7 @@ export function AppSidebar() {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton size="lg" asChild className="min-h-11">
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
@@ -38,7 +46,7 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="overflow-x-hidden">
                 <NavMain items={visibleMainNav} />
             </SidebarContent>
         </Sidebar>

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             SpeciesSeeder::class,
             BreedSeeder::class,
             BloodTypeSeeder::class,
+            NationalitySeeder::class,
             SettingsPermissionSeeder::class,
             UserSeeder::class,
             PatientSeeder::class,

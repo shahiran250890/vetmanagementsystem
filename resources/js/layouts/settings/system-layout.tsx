@@ -1,8 +1,9 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
-import { systemSettingsNav } from '@/config/settings-nav';
+
+import Heading from '@/components/heading';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
 type SystemLayoutProps = PropsWithChildren<{
@@ -17,21 +18,16 @@ export default function SystemLayout({
     contentClassName = 'max-w-none',
     children,
 }: SystemLayoutProps) {
-    const {
-        organizationClinicType,
-    } = usePage().props as { organizationClinicType?: 'vet' | 'human' | null };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={pageTitle} />
-            <SettingsLayout
-                title="System Setting"
-                description="Manage internal system modules."
-                navItems={systemSettingsNav(organizationClinicType ?? null)}
-                contentClassName={contentClassName}
-            >
-                {children}
-            </SettingsLayout>
+            <div className="w-full min-w-0">
+                <Heading
+                    title="System Setting"
+                    description="Manage internal system modules."
+                />
+                <section className={cn('space-y-12', contentClassName)}>{children}</section>
+            </div>
         </AppLayout>
     );
 }

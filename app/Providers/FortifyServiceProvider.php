@@ -4,8 +4,11 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -28,9 +31,33 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureAuthentication();
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+    }
+
+    /**
+     * Block sign-in when {@see User::$is_enabled} is false; redirect to the access-denied screen.
+     */
+    private function configureAuthentication(): void
+    {
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $usernameKey = Fortify::username();
+            $user = User::query()->where($usernameKey, $request->{$usernameKey})->first();
+
+            if ($user === null || ! Hash::check($request->password, $user->password)) {
+                return null;
+            }
+
+            if (! $user->is_enabled) {
+                throw new HttpResponseException(
+                    redirect()->route('login.access-denied')
+                );
+            }
+
+            return $user;
+        });
     }
 
     /**

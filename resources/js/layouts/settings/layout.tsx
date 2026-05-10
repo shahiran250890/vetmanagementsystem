@@ -6,12 +6,12 @@ import { Separator } from '@/components/ui/separator';
 import { defaultSettingsNav } from '@/config/settings-nav';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
-import type { NavItem } from '@/types';
+import type { NavLeafItem } from '@/types';
 
 type SettingsLayoutProps = PropsWithChildren<{
     title?: string;
     description?: string;
-    navItems?: NavItem[];
+    navItems?: NavLeafItem[];
     contentClassName?: string;
 }>;
 

@@ -5,6 +5,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { genderDisplayLabel } from '@/lib/gender-selection';
 
 import type { Patient } from './types';
 
@@ -12,10 +13,6 @@ type Detail = {
     label: string;
     value: string | null | undefined;
 };
-
-function sexLabel(sex: string | null): string {
-    return sex === '1' ? 'Male' : sex === '2' ? 'Female' : '-';
-}
 
 function DetailCard({
     title,
@@ -56,7 +53,7 @@ export default function PatientInformationTab({ patient }: { patient: Patient })
                     { label: 'Full name', value: patient.name },
                     { label: 'MRN', value: `P-${String(patient.id).padStart(6, '0')}` },
                     { label: 'Patient type', value: patient.patient_type },
-                    { label: 'Gender', value: sexLabel(patient.sex) },
+                    { label: 'Gender', value: genderDisplayLabel(patient.sex) },
                     { label: 'Date of birth', value: patient.date_of_birth },
                     { label: 'Status', value: patient.status },
                 ]}

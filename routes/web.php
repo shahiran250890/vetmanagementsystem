@@ -7,6 +7,8 @@ use Inertia\Inertia;
 
 Route::inertia('/', 'welcome')->name('home');
 
+Route::get('/login/access-denied', fn () => Inertia::render('auth/access-denied'))->name('login.access-denied');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function (Request $request) {
         return Inertia::render('dashboard/index', [

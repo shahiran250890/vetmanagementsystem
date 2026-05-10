@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -22,12 +23,35 @@ class UserFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            if ($user->staff_id !== null) {
+                return;
+            }
+
+            if ($user->email === 'superadmin@example.com') {
+                return;
+            }
+
+            $staff = Staff::factory()->create([
+                'full_name' => $user->name,
+                'email' => $user->email,
+                'mobile_number' => $user->phone,
+                'medical_registration_number' => $user->mmc_registration_number,
+            ]);
+
+            $user->forceFill(['staff_id' => $staff->id])->save();
+        });
+    }
+
     public function definition(): array
     {
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'is_enabled' => true,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,

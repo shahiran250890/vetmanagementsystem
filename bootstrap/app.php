@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureTenantIsEnabled;
+use App\Http\Middleware\EnsureUserAccountEnabled;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\VerifyInternalSetupClientSignature;
@@ -57,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 HandleAppearance::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
+                EnsureUserAccountEnabled::class,
             ],
         );
 

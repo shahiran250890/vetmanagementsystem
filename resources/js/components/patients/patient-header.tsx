@@ -20,6 +20,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { genderDisplayLabel } from '@/lib/gender-selection';
 import { edit as editPatient } from '@/routes/patients';
 
 import type { Patient, PatientWorkspaceTab } from './types';
@@ -56,10 +57,6 @@ function patientAge(dateOfBirth: string | null): string {
     }
 
     return `${age} years`;
-}
-
-function sexLabel(sex: string | null): string {
-    return sex === '1' ? 'Male' : sex === '2' ? 'Female' : '-';
 }
 
 export default function PatientHeader({
@@ -177,7 +174,7 @@ export default function PatientHeader({
                 <HeaderMetric
                     icon={HeartPulse}
                     label="Gender"
-                    value={sexLabel(patient.sex)}
+                    value={genderDisplayLabel(patient.sex)}
                 />
                 <HeaderMetric
                     label="Date of Birth / Age"

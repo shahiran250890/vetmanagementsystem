@@ -4,6 +4,7 @@ import { FormPageContent, formPageSurfaceClassName } from '@/components/form-pag
 import PatientForm from '@/components/patients/patient-form';
 import { createPatientFormFieldHandler } from '@/hooks/use-patient-form-field-handler';
 import AppLayout from '@/layouts/app-layout';
+import { normalizeGenderSelectValue } from '@/lib/gender-selection';
 import { edit, index, show, update } from '@/routes/patients';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -28,22 +29,6 @@ export default function EditPatient({
     speciesOptions: SpeciesOption[];
     allowedPatientType: AllowedPatientType;
 }) {
-    const normalizedSex = (() => {
-        if (patient.sex === 'Male' || patient.sex === 'male') {
-            return '1';
-        }
-
-        if (patient.sex === 'Female' || patient.sex === 'female') {
-            return '2';
-        }
-
-        if (patient.sex === '1' || patient.sex === '2') {
-            return patient.sex;
-        }
-
-        return '';
-    })();
-
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Patients', href: index() },
         { title: patient.name, href: show(patient.id) },
@@ -53,7 +38,7 @@ export default function EditPatient({
     const { data, setData, put, processing, errors } = useForm<PatientFormData>({
         patient_type: allowedPatientType ?? patient.patient_type,
         name: patient.name,
-        sex: normalizedSex,
+        sex: normalizeGenderSelectValue(patient.sex),
         date_of_birth: patient.date_of_birth ?? '',
         emergency_contact_name: patient.emergency_contact_name ?? '',
         emergency_contact_phone: patient.emergency_contact_phone ?? '',

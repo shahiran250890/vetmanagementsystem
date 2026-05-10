@@ -7,6 +7,7 @@ use App\Models\Appointments\Appointment;
 use App\Models\Medical\MedicalRecord;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -25,6 +26,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'staff_id',
         'name',
         'email',
         'phone',
@@ -58,6 +60,11 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'is_enabled' => 'boolean',
         ];
+    }
+
+    public function staff(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class);
     }
 
     public function appointmentsAsDoctor(): HasMany

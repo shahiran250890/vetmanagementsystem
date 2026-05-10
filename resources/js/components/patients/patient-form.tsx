@@ -3,6 +3,7 @@ import {
     nativeSelectClassName,
     nativeTextareaClassName,
 } from '@/components/form-page-layout';
+import { GenderSelection } from '@/components/gender-selection';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,20 +83,14 @@ export default function PatientForm({
                     <InputError message={errors.name} />
                 </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor="sex">Sex</Label>
-                    <select
-                        id="sex"
-                        className={nativeSelectClassName}
-                        value={data.sex}
-                        onChange={(event) => setData('sex', event.target.value)}
-                    >
-                        <option value="">Please select</option>
-                        <option value="1">Male</option>
-                        <option value="2">Female</option>
-                    </select>
-                    <InputError message={errors.sex} />
-                </div>
+                <GenderSelection
+                    id="sex"
+                    name="sex"
+                    label="Sex"
+                    value={data.sex}
+                    onChange={(value) => setData('sex', value)}
+                    error={errors.sex}
+                />
 
                 <div className="grid gap-2">
                     <Label htmlFor="date_of_birth">Date of birth</Label>

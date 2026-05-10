@@ -27,6 +27,9 @@ test('user detail page is displayed', function () {
     $managedUser = User::factory()->create([
         'name' => 'Staff One',
     ]);
+    $managedStaff = $managedUser->fresh()->staff;
+    $this->assertNotNull($managedStaff);
+
     $role = Role::query()->create([
         'name' => 'doctor',
         'guard_name' => 'web',
@@ -34,13 +37,13 @@ test('user detail page is displayed', function () {
     $managedUser->assignRole($role);
 
     $this->actingAs($actor)
-        ->get(route('settings.system.users.show', $managedUser))
+        ->get(route('settings.system.users.show', $managedStaff))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('settings/system/users/show')
-            ->where('managedUser.id', $managedUser->id)
-            ->where('managedUser.name', 'Staff One')
-            ->has('managedUser.roles', 1));
+            ->component('settings/system/staff/view')
+            ->where('managedStaff.id', $managedStaff->id)
+            ->where('managedStaff.full_name', 'Staff One')
+            ->has('managedStaff.roles', 1));
 });
 
 test('role detail page is displayed', function () {
