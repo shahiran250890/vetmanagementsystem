@@ -58,6 +58,7 @@ export type StaffMember = {
     created_at: string | null;
     updated_at: string | null;
     user_id: number | null;
+    completed_tabs?: string[];
 };
 
 export type StaffFilters = {

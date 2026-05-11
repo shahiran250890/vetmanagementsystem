@@ -1,7 +1,9 @@
 import { Link, router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 
 import type { NationalityOption } from '@/components/address-fields';
+import { BlockingLoadingOverlay } from '@/components/blocking-loading-overlay';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import SystemLayout from '@/layouts/settings/system-layout';
+import { queueAfterPaint } from '@/lib/queue-after-paint';
 import { StaffDirectoryTable } from '@/modules/staff/components/staff-directory-table';
 import { StaffForm } from '@/modules/staff/components/staff-form';
 import { StaffToolbar } from '@/modules/staff/components/staff-toolbar';
@@ -42,6 +45,7 @@ export default function StaffIndex({
     filters,
     filterOptions,
     nationalities = [],
+    activeTab = 'personal',
     canCreateUser,
     canUpdateUser,
     canDeleteUser,
@@ -54,6 +58,7 @@ export default function StaffIndex({
     filters?: StaffFilters;
     filterOptions?: StaffFilterOptions;
     nationalities?: NationalityOption[];
+    activeTab?: string;
     canCreateUser: boolean;
     canUpdateUser: boolean;
     canDeleteUser: boolean;
@@ -85,11 +90,15 @@ export default function StaffIndex({
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [updatingStaffId, setUpdatingStaffId] = useState<number | null>(null);
     const [selectedStatusMember, setSelectedStatusMember] = useState<StaffMember | null>(null);
-    const [showStatusSuccessDialog, setShowStatusSuccessDialog] = useState(false);
     const [selectedDeleteMember, setSelectedDeleteMember] = useState<StaffMember | null>(null);
     const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null);
     const [bulkRolesOpen, setBulkRolesOpen] = useState(false);
     const [bulkRoleIds, setBulkRoleIds] = useState<Set<number>>(new Set());
+    const [blockUiMessage, setBlockUiMessage] = useState<string | null>(null);
+    const deleteVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
+    const toggleVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
+    const bulkStatusVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
+    const bulkRolesVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
 
     useEffect(() => {
         setSearch(mergedFilters.search);
@@ -176,6 +185,10 @@ export default function StaffIndex({
     };
 
     const confirmBulkStatus = (isEnabled: boolean) => {
+        bulkStatusVisitOutcomeRef.current = null;
+        setBlockUiMessage(
+            isEnabled ? 'Activating sign-in for selected staff…' : 'Disabling sign-in for selected staff…',
+        );
         router.post(
             bulkStatus.url(),
             {
@@ -184,12 +197,42 @@ export default function StaffIndex({
             },
             {
                 preserveScroll: true,
-                onSuccess: () => setSelectedIds(new Set()),
+                onSuccess: () => {
+                    bulkStatusVisitOutcomeRef.current = 'success';
+                    setSelectedIds(new Set());
+                },
+                onError: () => {
+                    bulkStatusVisitOutcomeRef.current = 'error';
+                },
+                onFinish: () => {
+                    setBlockUiMessage(null);
+                    const outcome = bulkStatusVisitOutcomeRef.current;
+                    bulkStatusVisitOutcomeRef.current = null;
+                    queueAfterPaint(() => {
+                        if (outcome === 'success') {
+                            void Swal.fire({
+                                icon: 'success',
+                                title: 'Update complete',
+                                text: 'Selected staff accounts were updated.',
+                                confirmButtonText: 'OK',
+                            });
+                        } else if (outcome === 'error') {
+                            void Swal.fire({
+                                icon: 'error',
+                                title: 'Update failed',
+                                text: 'The bulk status change could not be completed. Please try again.',
+                                confirmButtonText: 'OK',
+                            });
+                        }
+                    });
+                },
             },
         );
     };
 
     const confirmBulkRoles = () => {
+        bulkRolesVisitOutcomeRef.current = null;
+        setBlockUiMessage('Applying roles to selected staff…');
         router.post(
             bulkRoles.url(),
             {
@@ -200,9 +243,35 @@ export default function StaffIndex({
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    bulkRolesVisitOutcomeRef.current = 'success';
                     setBulkRolesOpen(false);
                     setBulkRoleIds(new Set());
                     setSelectedIds(new Set());
+                },
+                onError: () => {
+                    bulkRolesVisitOutcomeRef.current = 'error';
+                },
+                onFinish: () => {
+                    setBlockUiMessage(null);
+                    const outcome = bulkRolesVisitOutcomeRef.current;
+                    bulkRolesVisitOutcomeRef.current = null;
+                    queueAfterPaint(() => {
+                        if (outcome === 'success') {
+                            void Swal.fire({
+                                icon: 'success',
+                                title: 'Roles applied',
+                                text: 'Roles were saved for the selected staff with login accounts.',
+                                confirmButtonText: 'OK',
+                            });
+                        } else if (outcome === 'error') {
+                            void Swal.fire({
+                                icon: 'error',
+                                title: 'Could not apply roles',
+                                text: 'The bulk role change could not be completed. Please try again.',
+                                confirmButtonText: 'OK',
+                            });
+                        }
+                    });
                 },
             },
         );
@@ -222,6 +291,8 @@ export default function StaffIndex({
         }
 
         setUpdatingStaffId(selectedStatusMember.id);
+        toggleVisitOutcomeRef.current = null;
+        setBlockUiMessage('Updating account access…');
 
         router.patch(
             usersRoutes.toggleStatus.url(selectedStatusMember.id),
@@ -230,11 +301,34 @@ export default function StaffIndex({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    toggleVisitOutcomeRef.current = 'success';
                     setSelectedStatusMember(null);
-                    setShowStatusSuccessDialog(true);
+                },
+                onError: () => {
+                    toggleVisitOutcomeRef.current = 'error';
                 },
                 onFinish: () => {
                     setUpdatingStaffId(null);
+                    setBlockUiMessage(null);
+                    const outcome = toggleVisitOutcomeRef.current;
+                    toggleVisitOutcomeRef.current = null;
+                    queueAfterPaint(() => {
+                        if (outcome === 'success') {
+                            void Swal.fire({
+                                icon: 'success',
+                                title: 'Account access updated',
+                                text: 'Sign-in status was saved successfully.',
+                                confirmButtonText: 'OK',
+                            });
+                        } else if (outcome === 'error') {
+                            void Swal.fire({
+                                icon: 'error',
+                                title: 'Update failed',
+                                text: 'Account access could not be updated. Please try again.',
+                                confirmButtonText: 'OK',
+                            });
+                        }
+                    });
                 },
             },
         );
@@ -254,15 +348,41 @@ export default function StaffIndex({
         }
 
         setDeletingStaffId(selectedDeleteMember.id);
+        deleteVisitOutcomeRef.current = null;
+        setBlockUiMessage('Deleting staff record…');
 
         router.delete(usersRoutes.destroy.url(selectedDeleteMember.id), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
+                deleteVisitOutcomeRef.current = 'success';
                 setSelectedDeleteMember(null);
+            },
+            onError: () => {
+                deleteVisitOutcomeRef.current = 'error';
             },
             onFinish: () => {
                 setDeletingStaffId(null);
+                setBlockUiMessage(null);
+                const outcome = deleteVisitOutcomeRef.current;
+                deleteVisitOutcomeRef.current = null;
+                queueAfterPaint(() => {
+                    if (outcome === 'success') {
+                        void Swal.fire({
+                            icon: 'success',
+                            title: 'Staff deleted',
+                            text: 'The staff record was removed.',
+                            confirmButtonText: 'OK',
+                        });
+                    } else if (outcome === 'error') {
+                        void Swal.fire({
+                            icon: 'error',
+                            title: 'Delete failed',
+                            text: 'The staff record could not be deleted. Please try again.',
+                            confirmButtonText: 'OK',
+                        });
+                    }
+                });
             },
         });
     };
@@ -271,6 +391,11 @@ export default function StaffIndex({
 
     return (
         <SystemLayout pageTitle="System Setting - Staff Management" breadcrumbs={breadcrumbs}>
+            <BlockingLoadingOverlay
+                open={blockUiMessage !== null}
+                title={blockUiMessage ?? 'Please wait…'}
+                description="Please keep this tab open until the process finishes."
+            />
             <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <div>
@@ -310,6 +435,7 @@ export default function StaffIndex({
                         nationalities={nationalities}
                         formAction={formAction}
                         formMethod={formMethod}
+                        initialActiveTab={activeTab}
                         formatRoleName={formatRoleName}
                     />
                 )}
@@ -355,20 +481,6 @@ export default function StaffIndex({
                             ) : (
                                 'Confirm'
                             )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={showStatusSuccessDialog} onOpenChange={setShowStatusSuccessDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Success</DialogTitle>
-                        <DialogDescription>Account access has been updated successfully.</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button type="button" onClick={() => setShowStatusSuccessDialog(false)}>
-                            OK
                         </Button>
                     </DialogFooter>
                 </DialogContent>

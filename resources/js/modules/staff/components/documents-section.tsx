@@ -1,29 +1,40 @@
-import { nativeTextareaClassName } from '@/components/form-page-layout';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
+
+import type { UploadDropzoneDocument } from '@/components/file-upload-dropzone';
+import { FileUploadDropzone } from '@/components/file-upload-dropzone';
 
 import type { StaffMember } from '../types';
 
+function normalizeDocuments(documents: unknown[]): UploadDropzoneDocument[] {
+    return documents
+        .filter((document): document is Record<string, unknown> => typeof document === 'object' && document !== null)
+        .map((document, index) => ({
+            id: typeof document.id === 'string' ? document.id : `staff-document-${index}`,
+            name: typeof document.name === 'string' ? document.name : undefined,
+            size: typeof document.size === 'number' ? document.size : undefined,
+            mime_type: typeof document.mime_type === 'string' ? document.mime_type : undefined,
+            view_url: typeof document.view_url === 'string' ? document.view_url : undefined,
+            download_url: typeof document.download_url === 'string' ? document.download_url : undefined,
+        }));
+}
+
 export function DocumentsSection({ managedStaff }: { managedStaff?: StaffMember }) {
-    const defaultJson =
-        managedStaff?.documents && managedStaff.documents.length > 0
-            ? JSON.stringify(managedStaff.documents, null, 2)
-            : '';
+    const defaultDocuments = useMemo(
+        () => normalizeDocuments(managedStaff?.documents ?? []),
+        [managedStaff?.documents],
+    );
 
     return (
-        <div className="grid gap-2">
-            <Label htmlFor="documents_metadata">Document references (JSON)</Label>
-            <textarea
-                id="documents_metadata"
-                name="documents_metadata"
-                rows={8}
-                placeholder='[{"type":"ic_copy","label":"IC copy","url":"..."}]'
-                defaultValue={defaultJson}
-                className={cn(nativeTextareaClassName, 'font-mono text-xs')}
-            />
-            <p className="text-muted-foreground text-xs">
-                Structured placeholders for IC, certificates, APC, contracts — wire to storage uploads when ready.
-            </p>
-        </div>
+        <FileUploadDropzone
+            name="documents_metadata"
+            label="Documents"
+            defaultDocuments={defaultDocuments}
+            uploadUrl="/settings/system/files"
+            deleteUrlBase="/settings/system/files"
+            moduleName="staff-management"
+            recordId={managedStaff?.id}
+            category="documents"
+            helperText="Supported for multiple files. Uploaded file references are saved into staff document metadata."
+        />
     );
 }

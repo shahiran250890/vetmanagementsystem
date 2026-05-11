@@ -222,12 +222,19 @@ export function StaffDirectoryTable({
                                             <StaffStatusBadge employmentStatus={row.employment_status} />
                                         </td>
                                         <td className="px-3 py-2 align-middle">
-                                            <div className="flex flex-wrap gap-1.5">
-                                                <Button className="h-8 bg-sky-600 px-2 text-xs text-white hover:bg-sky-700" asChild>
+                                            <div className="flex flex-wrap items-center gap-1">
+                                                <Button
+                                                    className="h-7 min-w-20 shrink-0 px-2 text-xs bg-sky-600 text-white hover:bg-sky-700"
+                                                    asChild
+                                                >
                                                     <Link href={usersRoutes.show.url(row.id)}>View</Link>
                                                 </Button>
                                                 {canUpdateUser && (
-                                                    <Button variant="outline" className="h-8 px-2 text-xs" asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        className="h-7 min-w-20 shrink-0 px-2 text-xs"
+                                                        asChild
+                                                    >
                                                         <Link href={usersRoutes.edit.url(row.id)}>Edit</Link>
                                                     </Button>
                                                 )}
@@ -235,7 +242,7 @@ export function StaffDirectoryTable({
                                                     <Button
                                                         type="button"
                                                         variant="destructive"
-                                                        className="h-8 px-2 text-xs"
+                                                        className="h-7 min-w-20 shrink-0 px-2 text-xs"
                                                         disabled={deletingStaffId !== null}
                                                         onClick={() => onOpenDeleteDialog(row)}
                                                     >

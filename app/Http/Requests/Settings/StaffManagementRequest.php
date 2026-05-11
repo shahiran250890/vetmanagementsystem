@@ -11,6 +11,11 @@ use Illuminate\Validation\Rule;
 
 class StaffManagementRequest extends FormRequest
 {
+    /**
+     * @var array<int, string>
+     */
+    public const TABS = ['personal', 'employment', 'professional', 'access', 'roles', 'documents'];
+
     protected function prepareForValidation(): void
     {
         if ($this->has('assigned_clinics_text')) {
@@ -54,11 +59,12 @@ class StaffManagementRequest extends FormRequest
         $user = $managed?->user;
 
         $requiresDoctorProfessionalFields = $this->requiresDoctorProfessionalFields();
+        $tab = $this->validatedTab();
 
         $isCreate = $managed === null;
         $manualStaffNumber = $isCreate && $this->string('staff_number_source')->toString() === 'manual';
 
-        return [
+        $tabRules = [
             'staff_number_source' => [
                 Rule::requiredIf($isCreate),
                 Rule::excludeIf(! $isCreate),
@@ -69,7 +75,7 @@ class StaffManagementRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:64',
-                Rule::unique('staff', 'staff_number')->ignore($managed?->id),
+                Rule::unique(Staff::class, 'staff_number')->ignore($managed?->id),
             ],
             'full_name' => ['required', 'string', 'max:255'],
             'preferred_name' => ['nullable', 'string', 'max:255'],
@@ -100,8 +106,8 @@ class StaffManagementRequest extends FormRequest
             'reporting_manager_id' => [
                 'nullable',
                 'integer',
-                'exists:staff,id',
-                ...($managed !== null ? [Rule::not($managed->id)] : []),
+                Rule::exists(Staff::class, 'id'),
+                ...($managed !== null ? [Rule::notIn([$managed->id])] : []),
             ],
             'employment_type' => ['nullable', 'string', 'max:64'],
             'salary_type' => ['nullable', 'string', 'max:64'],
@@ -145,9 +151,25 @@ class StaffManagementRequest extends FormRequest
                 'min:8',
                 'confirmed',
             ],
+            'password_confirmation' => ['nullable', 'string'],
             'role_ids' => ['nullable', 'array'],
             'role_ids.*' => ['integer', 'exists:roles,id'],
         ];
+
+        $rules = [
+            'tab' => ['required', Rule::in(self::TABS)],
+            'save_action' => ['nullable', Rule::in(['save', 'continue'])],
+        ];
+
+        foreach ($this->fieldsForTab($tab) as $field) {
+            if (! array_key_exists($field, $tabRules)) {
+                continue;
+            }
+
+            $rules[$field] = $tabRules[$field];
+        }
+
+        return $rules;
     }
 
     /**
@@ -183,5 +205,80 @@ class StaffManagementRequest extends FormRequest
             ->all();
 
         return count(array_intersect(array_map('intval', $roleIds), $doctorRoleIds)) > 0;
+    }
+
+    public function validatedTab(): string
+    {
+        $tab = (string) $this->input('tab', 'personal');
+
+        if (! in_array($tab, self::TABS, true)) {
+            return 'personal';
+        }
+
+        return $tab;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function fieldsForTab(string $tab): array
+    {
+        return match ($tab) {
+            'personal' => [
+                'staff_number_source',
+                'staff_number',
+                'full_name',
+                'preferred_name',
+                'nric_passport',
+                'gender',
+                'date_of_birth',
+                'nationality',
+                'marital_status',
+                'photo_path',
+                'mobile_number',
+                'alternate_phone',
+                'email',
+                'address_line_1',
+                'address_line_2',
+                'city',
+                'state',
+                'postcode',
+                'country',
+                'emergency_contact_name',
+                'emergency_contact_phone',
+            ],
+            'employment' => [
+                'employee_number',
+                'hire_date',
+                'confirmation_date',
+                'position',
+                'department',
+                'reporting_manager_id',
+                'employment_type',
+                'salary_type',
+                'assigned_clinics',
+                'working_hours',
+                'employment_status',
+                'is_active',
+            ],
+            'professional' => [
+                'medical_registration_number',
+                'apc_number',
+                'apc_expiry_date',
+                'specialization',
+                'qualifications',
+                'years_experience',
+            ],
+            'access' => [
+                'enable_login',
+                'account_email',
+                'is_enabled',
+                'password',
+                'password_confirmation',
+            ],
+            'roles' => ['role_ids'],
+            'documents' => ['documents_metadata'],
+            default => [],
+        };
     }
 }

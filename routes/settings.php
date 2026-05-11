@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Settings\Http\Controllers\FileAssetController;
 use App\Modules\Settings\Http\Controllers\OrganizationProfileController;
 use App\Modules\Settings\Http\Controllers\PermissionController;
 use App\Modules\Settings\Http\Controllers\ProfileController;
@@ -40,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('users.bulk-roles');
         Route::patch('users/{managed_staff}/status', [StaffManagementController::class, 'toggleStatus'])
             ->name('users.toggle-status');
+        Route::post('files', [FileAssetController::class, 'store'])->name('files.store');
+        Route::get('files/{file_asset}', [FileAssetController::class, 'show'])->name('files.show');
+        Route::get('files/{file_asset}/download', [FileAssetController::class, 'download'])->name('files.download');
+        Route::delete('files/{file_asset}', [FileAssetController::class, 'destroy'])->name('files.destroy');
         Route::resource('system-settings', SystemSettingController::class)
             ->except(['show']);
         Route::resource('users', StaffManagementController::class)

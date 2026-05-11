@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -88,6 +89,7 @@ class StaffManagementController extends Controller
             'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
             'reportingManagers' => $this->reportingManagerOptions(),
             'formMode' => 'create',
+            'activeTab' => 'personal',
             'filters' => [
                 'search' => $search,
                 'sort' => '',
@@ -117,36 +119,40 @@ class StaffManagementController extends Controller
 
     public function store(StaffManagementRequest $request): RedirectResponse
     {
-        DB::transaction(function () use ($request): void {
-            $attrs = $this->staffAttributesFromRequest($request);
+        $tab = $request->validatedTab();
+        $saveAction = $this->saveActionFromRequest($request);
+        if ($tab !== 'personal') {
+            throw new HttpResponseException(back()->withErrors([
+                'tab' => 'Create the staff profile in the Personal tab first.',
+            ]));
+        }
+
+        $staff = DB::transaction(function () use ($request): Staff {
+            $attrs = $this->staffAttributesFromRequest($request, 'personal');
 
             if ($request->string('staff_number_source')->toString() === 'auto') {
                 unset($attrs['staff_number']);
-                $staff = Staff::query()->create(array_merge($attrs, [
+                $staffRecord = Staff::query()->create(array_merge($attrs, [
                     'staff_number' => 'STF-TEMP-'.Str::uuid()->toString(),
                 ]));
-                $staff->update([
-                    'staff_number' => 'STF-'.str_pad((string) $staff->id, 5, '0', STR_PAD_LEFT),
+                $staffRecord->update([
+                    'staff_number' => 'STF-'.str_pad((string) $staffRecord->id, 5, '0', STR_PAD_LEFT),
                 ]);
-            } else {
-                $staff = Staff::query()->create($attrs);
+
+                return $staffRecord->fresh() ?? $staffRecord;
             }
 
-            if ($request->boolean('enable_login')) {
-                $user = User::query()->create([
-                    'staff_id' => $staff->id,
-                    'name' => $staff->full_name,
-                    'email' => $request->string('account_email')->toString(),
-                    'phone' => $staff->mobile_number,
-                    'mmc_registration_number' => $staff->medical_registration_number,
-                    'is_enabled' => $request->boolean('is_enabled'),
-                    'password' => Hash::make($request->string('password')->toString()),
-                ]);
-                $user->syncRoles($request->input('role_ids', []));
-            }
+            return Staff::query()->create($attrs);
         });
 
-        return to_route('settings.system.users.index');
+        if ($saveAction === 'save') {
+            return to_route('settings.system.users.index');
+        }
+
+        return to_route('settings.system.users.edit', [
+            'managed_staff' => $staff->id,
+            'tab' => 'employment',
+        ]);
     }
 
     /**
@@ -175,6 +181,9 @@ class StaffManagementController extends Controller
             'reportingManagers' => $this->reportingManagerOptions($managedStaff),
             'managedStaff' => $this->managedStaffPayload($managedStaff),
             'formMode' => 'edit',
+            'activeTab' => in_array($request->string('tab')->toString(), StaffManagementRequest::TABS, true)
+                ? $request->string('tab')->toString()
+                : 'personal',
             'filters' => [
                 'search' => $search,
                 'sort' => $request->string('sort')->toString(),
@@ -193,48 +202,31 @@ class StaffManagementController extends Controller
 
     public function update(StaffManagementRequest $request, Staff $managedStaff): RedirectResponse
     {
-        DB::transaction(function () use ($request, $managedStaff): void {
-            $managedStaff->update($this->staffAttributesFromRequest($request));
+        $tab = $request->validatedTab();
+        $saveAction = $this->saveActionFromRequest($request);
 
-            if ($request->boolean('enable_login')) {
-                $user = $managedStaff->user;
-                if ($user === null) {
-                    User::query()->create([
-                        'staff_id' => $managedStaff->id,
-                        'name' => $managedStaff->full_name,
-                        'email' => $request->string('account_email')->toString(),
-                        'phone' => $managedStaff->mobile_number,
-                        'mmc_registration_number' => $managedStaff->medical_registration_number,
-                        'is_enabled' => $request->boolean('is_enabled'),
-                        'password' => Hash::make($request->string('password')->toString()),
-                    ]);
-                } else {
-                    $payload = [
-                        'name' => $managedStaff->full_name,
-                        'email' => $request->string('account_email')->toString(),
-                        'phone' => $managedStaff->mobile_number,
-                        'mmc_registration_number' => $managedStaff->medical_registration_number,
-                        'is_enabled' => $request->boolean('is_enabled'),
-                    ];
-                    if ($request->filled('password')) {
-                        $payload['password'] = Hash::make($request->string('password')->toString());
-                    }
-                    $user->update($payload);
-                }
+        DB::transaction(function () use ($request, $managedStaff, $tab): void {
+            if (in_array($tab, ['personal', 'employment', 'professional', 'documents'], true)) {
+                $managedStaff->update($this->staffAttributesFromRequest($request, $tab));
+            }
 
-                $managedStaff->load('user');
-                $managedStaff->user?->syncRoles($request->input('role_ids', []));
-            } elseif ($managedStaff->user !== null) {
-                $managedStaff->user->update([
-                    'name' => $managedStaff->full_name,
-                    'phone' => $managedStaff->mobile_number,
-                    'mmc_registration_number' => $managedStaff->medical_registration_number,
-                    'is_enabled' => false,
-                ]);
+            if ($tab === 'access') {
+                $this->upsertAccessAccount($request, $managedStaff);
+            }
+
+            if ($tab === 'roles') {
+                $this->syncStaffRoles($request, $managedStaff);
             }
         });
 
-        return to_route('settings.system.users.index');
+        if ($saveAction === 'save') {
+            return to_route('settings.system.users.index');
+        }
+
+        return to_route('settings.system.users.edit', [
+            'managed_staff' => $managedStaff->id,
+            'tab' => $this->nextTabAfter($tab),
+        ]);
     }
 
     public function destroy(Staff $managedStaff): RedirectResponse
@@ -581,9 +573,9 @@ class StaffManagementController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function staffAttributesFromRequest(StaffManagementRequest $request): array
+    private function staffAttributesFromRequest(StaffManagementRequest $request, string $tab): array
     {
-        return [
+        $allAttributes = [
             'staff_number' => $request->string('staff_number')->toString(),
             'full_name' => $request->string('full_name')->toString(),
             'preferred_name' => $request->string('preferred_name')->toString(),
@@ -621,9 +613,124 @@ class StaffManagementController extends Controller
             'apc_expiry_date' => $request->date('apc_expiry_date'),
             'specialization' => $request->string('specialization')->toString(),
             'qualifications' => $request->string('qualifications')->toString(),
-            'years_experience' => $request->integer('years_experience'),
+            'years_experience' => $request->filled('years_experience') ? $request->integer('years_experience') : null,
             'documents' => $request->input('documents'),
         ];
+
+        $allowedByTab = [
+            'personal' => [
+                'staff_number',
+                'full_name',
+                'preferred_name',
+                'nric_passport',
+                'gender',
+                'date_of_birth',
+                'nationality',
+                'marital_status',
+                'photo_path',
+                'mobile_number',
+                'alternate_phone',
+                'email',
+                'address_line_1',
+                'address_line_2',
+                'city',
+                'state',
+                'postcode',
+                'country',
+                'emergency_contact_name',
+                'emergency_contact_phone',
+            ],
+            'employment' => [
+                'employee_number',
+                'hire_date',
+                'confirmation_date',
+                'position',
+                'department',
+                'reporting_manager_id',
+                'employment_type',
+                'salary_type',
+                'assigned_clinics',
+                'working_hours',
+                'employment_status',
+                'is_active',
+            ],
+            'professional' => [
+                'medical_registration_number',
+                'apc_number',
+                'apc_expiry_date',
+                'specialization',
+                'qualifications',
+                'years_experience',
+            ],
+            'documents' => ['documents'],
+        ];
+
+        $allowed = $allowedByTab[$tab] ?? [];
+
+        return array_intersect_key($allAttributes, array_flip($allowed));
+    }
+
+    private function upsertAccessAccount(StaffManagementRequest $request, Staff $managedStaff): void
+    {
+        if ($request->boolean('enable_login')) {
+            $user = $managedStaff->user;
+            if ($user === null) {
+                User::query()->create([
+                    'staff_id' => $managedStaff->id,
+                    'name' => $managedStaff->full_name,
+                    'email' => $request->string('account_email')->toString(),
+                    'phone' => $managedStaff->mobile_number,
+                    'mmc_registration_number' => $managedStaff->medical_registration_number,
+                    'is_enabled' => $request->boolean('is_enabled'),
+                    'password' => Hash::make($request->string('password')->toString()),
+                ]);
+            } else {
+                $payload = [
+                    'name' => $managedStaff->full_name,
+                    'email' => $request->string('account_email')->toString(),
+                    'phone' => $managedStaff->mobile_number,
+                    'mmc_registration_number' => $managedStaff->medical_registration_number,
+                    'is_enabled' => $request->boolean('is_enabled'),
+                ];
+                if ($request->filled('password')) {
+                    $payload['password'] = Hash::make($request->string('password')->toString());
+                }
+                $user->update($payload);
+            }
+
+            return;
+        }
+
+        if ($managedStaff->user !== null) {
+            $managedStaff->user->update([
+                'name' => $managedStaff->full_name,
+                'phone' => $managedStaff->mobile_number,
+                'mmc_registration_number' => $managedStaff->medical_registration_number,
+                'is_enabled' => false,
+            ]);
+        }
+    }
+
+    private function syncStaffRoles(StaffManagementRequest $request, Staff $managedStaff): void
+    {
+        $managedStaff->load('user');
+        $managedStaff->user?->syncRoles($request->input('role_ids', []));
+    }
+
+    private function saveActionFromRequest(StaffManagementRequest $request): string
+    {
+        return $request->string('save_action')->toString() === 'save' ? 'save' : 'continue';
+    }
+
+    private function nextTabAfter(string $tab): string
+    {
+        $orderedTabs = StaffManagementRequest::TABS;
+        $index = array_search($tab, $orderedTabs, true);
+        if ($index === false) {
+            return 'personal';
+        }
+
+        return $orderedTabs[$index + 1] ?? $tab;
     }
 
     /**
@@ -693,6 +800,53 @@ class StaffManagementController extends Controller
             'created_at' => $staff->created_at?->toIso8601String(),
             'updated_at' => $staff->updated_at?->toIso8601String(),
             'user_id' => $user?->id,
+            'completed_tabs' => $this->completedTabsForStaff($staff),
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function completedTabsForStaff(Staff $staff): array
+    {
+        $tabs = ['personal'];
+
+        if (
+            $staff->employee_number !== null
+            || $staff->hire_date !== null
+            || $staff->position !== null
+            || $staff->department !== null
+            || $staff->employment_type !== null
+            || $staff->salary_type !== null
+            || ($staff->assigned_clinics !== null && $staff->assigned_clinics !== [])
+            || $staff->working_hours !== null
+        ) {
+            $tabs[] = 'employment';
+        }
+
+        if (
+            $staff->medical_registration_number !== null
+            || $staff->apc_number !== null
+            || $staff->apc_expiry_date !== null
+            || $staff->specialization !== null
+            || $staff->qualifications !== null
+            || $staff->years_experience !== null
+        ) {
+            $tabs[] = 'professional';
+        }
+
+        if ($staff->user !== null) {
+            $tabs[] = 'access';
+        }
+
+        if ($staff->user !== null && $staff->user->roles->isNotEmpty()) {
+            $tabs[] = 'roles';
+        }
+
+        if (is_array($staff->documents) && $staff->documents !== []) {
+            $tabs[] = 'documents';
+        }
+
+        return array_values(array_unique($tabs));
     }
 }

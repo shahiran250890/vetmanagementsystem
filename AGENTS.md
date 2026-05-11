@@ -35,6 +35,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - **vetms-ui-conventions** — ACTIVATE when adding or renaming `resources/js` pages, layouts, components, hooks, or services; when wiring `Inertia::render` page names; or when choosing layout shells (`AppLayout`, settings, auth) and component folders. Read `.cursor/skills/vetms-ui-conventions/SKILL.md`.
 - **component-reuse-and-zod-validation** — ACTIVATE when building or refactoring forms, fields, modals, or UI that collects input; when adding Zod schemas, `react-hook-form`, or inline validation. Read `.cursor/skills/component-reuse-and-zod-validation/SKILL.md`.
+- **tenant-aware-models** — ACTIVATE when creating or editing Eloquent models, tenant migrations, factories, or tests for per-clinic data; when adding route model binding to tenant tables; or when fixing wrong-database / missing-table errors for tenant schemas. Read `.cursor/skills/tenant-aware-models/SKILL.md`.
 
 ## Conventions
 

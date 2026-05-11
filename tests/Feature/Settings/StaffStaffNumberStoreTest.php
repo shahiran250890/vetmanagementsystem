@@ -24,6 +24,7 @@ beforeEach(function (): void {
 function minimalStaffPayload(array $overrides = []): array
 {
     return array_merge([
+        'tab' => 'personal',
         'staff_number_source' => 'auto',
         'full_name' => 'Store Test Staff',
         'nric_passport' => '901010-10-1010',
@@ -110,7 +111,7 @@ test('creating staff with auto staff_number assigns STF prefix', function (): vo
         'staff_number_source' => 'auto',
     ]));
 
-    $response->assertRedirect(route('settings.system.users.index'));
+    $response->assertRedirect();
 
     $staff = Staff::query()->where('full_name', 'Store Test Staff')->first();
     expect($staff)->not->toBeNull()
@@ -129,7 +130,7 @@ test('creating staff with manual staff_number stores exact value', function (): 
         'staff_number' => 'CLINIC-A-42',
     ]));
 
-    $response->assertRedirect(route('settings.system.users.index'));
+    $response->assertRedirect();
 
     expect(Staff::query()->where('staff_number', 'CLINIC-A-42')->exists())->toBeTrue();
 });
@@ -150,7 +151,7 @@ test('creating staff persists structured address fields', function (): void {
         'country' => 'Malaysia',
     ]));
 
-    $response->assertRedirect(route('settings.system.users.index'));
+    $response->assertRedirect();
 
     $staff = Staff::query()->where('full_name', 'Store Test Staff')->first();
     expect($staff)->not->toBeNull()

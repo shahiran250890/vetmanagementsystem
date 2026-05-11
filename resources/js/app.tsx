@@ -7,6 +7,7 @@ import { ToastViewport } from '@/components/toast-viewport';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ToastProvider } from '@/contexts/toast-context';
 import '../css/app.css';
+import 'sweetalert2/dist/sweetalert2.min.css';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

@@ -17,6 +17,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Uploads Filesystem Disk
+    |--------------------------------------------------------------------------
+    |
+    | Dedicated disk for user uploaded files. Keep this on local for now and
+    | switch to s3 / minio / azure later without changing upload logic.
+    |
+    */
+    'uploads_disk' => env('UPLOADS_FILESYSTEM_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

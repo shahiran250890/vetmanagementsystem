@@ -1,4 +1,5 @@
-import axios, { type AxiosError } from 'axios';
+import axios from 'axios';
+import type {AxiosError} from 'axios';
 
 import type { ApiEnvelope, PaginatedData, PaginationMeta } from '@/types/clinic-api';
 
@@ -29,7 +30,10 @@ api.interceptors.response.use(
             error.response?.data?.message ||
             error.message ||
             'Something went wrong. Please try again.';
-        toastHandler?.(msg, 'error');
+
+        if (!error.config?.skipErrorToast) {
+            toastHandler?.(msg, 'error');
+        }
 
         return Promise.reject(error);
     },

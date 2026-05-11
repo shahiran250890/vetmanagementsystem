@@ -222,11 +222,12 @@ With Laravel Herd, the app is typically available at `https://vetmanagementsyste
 |----------|----------|
 | `docs/architecture.md` | Module layout, routing, API v1, patient audit log, clinical model overview. |
 | `docs/database-tenant-schema.md` | Tenant database tables and columns (migrations in `database/migrations/tenant/`). |
+| `docs/system-manual.md` | End-user / operator manual for the application. |
 | `docs/system/README.md` | System Settings technical index (links to per-module docs below). |
 
 ### System Settings module docs
 
-- `docs/system/users/README.md`
+- `docs/system/users/README.md` — **Staff Management** (legacy folder name; documents the current Staff module that replaced User Management).
 - `docs/system/roles/README.md`
 - `docs/system/permissions/README.md`
 - `docs/system/species/README.md`
@@ -237,7 +238,14 @@ With Laravel Herd, the app is typically available at `https://vetmanagementsyste
 ### Recent product and engineering updates
 
 - **Modular backend:** Domain code for Patients, Appointments, Medical, Billing, and Settings lives under `app/Modules/{Name}/` (services, repositories, HTTP layer, policies, events/listeners).
+- **Modular frontend:** Feature UIs that own their own components/hooks/lib live under `resources/js/modules/{name}/` (e.g. `modules/staff/` with `components/`, `hooks/`, `lib/`, and `types.ts`). Shared primitives stay under `resources/js/components/`.
 - **Clinical API:** Authenticated `api/v1` routes expose CRUD-style resources for patients, appointments, medical records, bills, and payments; `routes/clinical.php` registers Inertia entry points for SPA-style pages that call this API.
-- **Tenant schema:** New tables for appointments, medical records, prescriptions, bills, bill items, payments, and patient vitals; `patient_history_entries` converted to an audit log (`action`, `metadata`, optional morph `reference`); patient `species` / `latest_weight_kg` columns removed from `patients` in favor of `patient_animal_profiles` and vitals (see migrations dated `2026_05_04_*`).
-- **System Settings:** Controllers are namespaced under `App\Modules\Settings\Http\Controllers\` (form requests remain in `app/Http/Requests/Settings/`).
-- **System UI:** Detail (`show`) pages and View actions for Users, Roles, Permissions, and Species; Species create/edit supports dynamic multi-breed rows with tenant-aware validation.
+- **Patient workspace tabs:** Patient `show` page is now a tabbed workspace — Information, History, **New Medical Record**, and **Medical Certificate** — composed from `resources/js/components/patients/*-tab.tsx`.
+- **Medical Certificates:** New module under `app/Modules/Medical/` (controller, request, resource, policy, service, factory, events/listeners, print Blade `medical-certificates/print.blade.php`) backed by tenant migration `2026_05_05_120000_medical_certificates_and_mc_support_columns`.
+- **Staff Management:** Replaces the old User Management module. Backed by `App\Modules\Settings\Http\Controllers\StaffManagementController`, the new tenant tables `staff` and `nationalities`, and FormRequests for management, status toggle, and bulk role/status updates. Frontend pages live at `resources/js/pages/settings/system/staff/{index,view}.tsx` (URL prefix remains `/settings/system/users` for backward compatibility).
+- **Disabled-account enforcement:** `App\Http\Middleware\EnsureUserAccountEnabled` blocks logins for disabled accounts and redirects to `pages/auth/access-denied.tsx`.
+- **Form validation framework:** Forms now use **React Hook Form + Zod** with `noValidate` and inline `FormMessage` errors. Reusable schemas live alongside the feature (`resources/js/components/patients/patient-form-schema.ts`, `resources/js/modules/staff/lib/staff-form-schema.ts`, `resources/js/lib/organization-profile-form-schema.ts`) plus shared utilities (`resources/js/lib/zod-error-map.ts`, `strip-undefined-payload.ts`). See the `component-reuse-and-zod-validation` skill for conventions.
+- **Shared form/UI components:** `address-fields`, `gender-selection`, `marital-status-select`, `nationality-select`, `form-dropdown`, `form-grid`, `page-header`, `stat-card`, `system-setting-hub`, and the dashboard widgets under `resources/js/pages/dashboard/widgets/`.
+- **Tenant schema additions:** `staff` (with FK from `users.staff_id`), `nationalities`, address columns split from `staff.address` into `address_line_1/2`, `city`, `state`, `postcode`, `country`; `medical_certificates` plus MC support columns; `medical_records.symptoms` and `medical_records.diagnosis`. Earlier `2026_05_04_*` migrations introduced appointments, medical records, prescriptions, bills/items, payments, vitals, and converted `patient_history_entries` into an audit log.
+- **System Settings:** Controllers are namespaced under `App\Modules\Settings\Http\Controllers\` (form requests remain in `app/Http/Requests/Settings/`). Settings hub page is data-driven from `resources/js/config/system-setting-hub.ts` with role/permission gating and "coming soon" placeholders for future modules.
+- **System UI:** Detail / view pages exist for Roles, Permissions, Species, and Staff (`staff/view.tsx`); list pages share the highlighted "View" button convention. Species create/edit supports dynamic multi-breed rows with tenant-aware validation. Settings forms (Organization, System Settings, etc.) include a consistent **back to hub** button.
