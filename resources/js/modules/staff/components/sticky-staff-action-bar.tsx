@@ -1,6 +1,4 @@
-import { Link } from '@inertiajs/react';
-
-import { Button } from '@/components/ui/button';
+import { CrudActionButtons } from '@/components/crud-action-buttons';
 
 export function StickyStaffActionBar({
     processing,
@@ -16,16 +14,14 @@ export function StickyStaffActionBar({
     onSaveContinueClick: () => void;
 }) {
     return (
-        <div className="border-border/80 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-end gap-2 rounded-2xl border px-4 py-3 shadow-lg backdrop-blur">
-            <Button type="button" variant="outline" asChild>
-                <Link href={backHref}>Cancel</Link>
-            </Button>
-            <Button type="submit" disabled={processing} onClick={onSaveClick}>
-                {processing && activeSubmitAction === 'save' ? 'Saving...' : 'Save'}
-            </Button>
-            <Button type="submit" disabled={processing} onClick={onSaveContinueClick}>
-                {processing && activeSubmitAction === 'continue' ? 'Saving...' : 'Save & Continue'}
-            </Button>
+        <div className="border-border/80 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-4 z-10 mt-6 rounded-2xl border px-4 py-3 shadow-lg backdrop-blur">
+            <CrudActionButtons
+                cancelHref={backHref}
+                processing={processing}
+                activeSubmitAction={activeSubmitAction}
+                onSaveClick={onSaveClick}
+                onSaveContinueClick={onSaveContinueClick}
+            />
         </div>
     );
 }

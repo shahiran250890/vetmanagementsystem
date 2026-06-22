@@ -1,17 +1,17 @@
 import { Link } from '@inertiajs/react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 
+import ListPagination from '@/components/system/list-pagination';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import ListPagination from '@/components/system/list-pagination';
+import { cn } from '@/lib/utils';
 import usersRoutes from '@/routes/settings/system/users';
 import type { PaginatedCollection } from '@/types';
-import { cn } from '@/lib/utils';
 
+import type { StaffFilters, StaffMember } from '../types';
 import { AccountStatusBadge } from './account-status-badge';
 import { StaffStatusBadge } from './staff-status-badge';
 
-import type { StaffFilters, StaffMember } from '../types';
 
 type PaginatedStaff = PaginatedCollection<StaffMember>;
 
@@ -62,8 +62,7 @@ export function StaffDirectoryTable({
     onSort,
     canUpdateUser,
     canDeleteUser,
-    updatingStaffId,
-    deletingStaffId,
+    isCrudBlocking,
     onOpenStatusDialog,
     onOpenDeleteDialog,
     onPageChange,
@@ -76,8 +75,7 @@ export function StaffDirectoryTable({
     onSort: (column: string) => void;
     canUpdateUser: boolean;
     canDeleteUser: boolean;
-    updatingStaffId: number | null;
-    deletingStaffId: number | null;
+    isCrudBlocking: boolean;
     onOpenStatusDialog: (member: StaffMember) => void;
     onOpenDeleteDialog: (member: StaffMember) => void;
     onPageChange: (page: number) => void;
@@ -196,11 +194,11 @@ export function StaffDirectoryTable({
                                             {row.enable_login && canUpdateUser ? (
                                                 <button
                                                     type="button"
-                                                    disabled={updatingStaffId !== null}
+                                                    disabled={isCrudBlocking}
                                                     onClick={() => onOpenStatusDialog(row)}
                                                     className={cn(
                                                         'inline-flex rounded-md p-0.5 transition focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
-                                                        updatingStaffId !== null
+                                                        isCrudBlocking
                                                             ? 'cursor-not-allowed opacity-60'
                                                             : 'cursor-pointer hover:bg-muted/80',
                                                     )}
@@ -243,7 +241,7 @@ export function StaffDirectoryTable({
                                                         type="button"
                                                         variant="destructive"
                                                         className="h-7 min-w-20 shrink-0 px-2 text-xs"
-                                                        disabled={deletingStaffId !== null}
+                                                        disabled={isCrudBlocking}
                                                         onClick={() => onOpenDeleteDialog(row)}
                                                     >
                                                         Delete

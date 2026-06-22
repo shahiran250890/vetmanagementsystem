@@ -15,12 +15,3 @@ export async function staffSaveSuccessAlert(options: { isEdit: boolean; saveActi
         confirmButtonText: 'OK',
     });
 }
-
-export async function staffSaveErrorAlert(): Promise<void> {
-    await Swal.fire({
-        icon: 'error',
-        title: 'Unable to save',
-        text: 'Please review the highlighted fields and try again.',
-        confirmButtonText: 'OK',
-    });
-}

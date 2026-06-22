@@ -10,15 +10,15 @@ import {
     UserCircle,
 } from 'lucide-react';
 import type { FormEvent, ReactElement } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 
 import type { NationalityOption } from '@/components/address-fields';
-import { BlockingLoadingOverlay } from '@/components/blocking-loading-overlay';
+import { CrudBlockingOverlay } from '@/components/crud-blocking-overlay';
 import { formPageSurfaceClassName } from '@/components/form-page-layout';
 import InputError from '@/components/input-error';
-import { queueAfterPaint } from '@/lib/queue-after-paint';
-import { staffSaveErrorAlert, staffSaveSuccessAlert } from '@/lib/staff-swal';
+import { useCrudSubmit } from '@/hooks/use-crud-submit';
+import { staffSaveSuccessAlert } from '@/lib/staff-swal';
 import { stripUndefinedPayload } from '@/lib/strip-undefined-payload';
 import { cn } from '@/lib/utils';
 import { zodIssuesToDotRecord } from '@/lib/zod-error-map';
@@ -220,10 +220,10 @@ export function StaffForm({
     formatRoleName: (roleName: string) => string;
 }) {
     const page = usePage<{ errors?: Record<string, unknown> }>();
-    const visitOutcomeRef = useRef<'success' | 'error' | null>(null);
+    const { blockingMessage, withCrudFeedback } = useCrudSubmit();
     const serverErrors = useMemo(() => normalizePageErrors(page.props.errors), [page.props.errors]);
     const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
-    const [processing, setProcessing] = useState(false);
+    const isSubmitting = blockingMessage !== null;
     const [submitAction, setSubmitAction] = useState<SubmitAction>('continue');
 
     const mergedErrors = useMemo(
@@ -323,46 +323,37 @@ export function StaffForm({
 
         const payload = stripUndefinedPayload(scopedPayload);
 
-        setProcessing(true);
-        visitOutcomeRef.current = null;
-
-        const visitOptions = {
-            preserveScroll: true,
-            preserveState: false,
-            onError: (errors: unknown): void => {
-                visitOutcomeRef.current = 'error';
-
-                if (!isEdit) {
-                    return;
-                }
-
-                const normalizedErrors = normalizePageErrors(errors);
-                const firstErrorField = Object.keys(normalizedErrors)[0];
-
-                if (firstErrorField) {
-                    setActiveTab(inferTabForErrorField(firstErrorField));
-                }
+        const visitOptions = withCrudFeedback(
+            {
+                loadingMessage: !isEdit
+                    ? 'Creating staff record…'
+                    : submitAction === 'save'
+                      ? 'Saving staff record…'
+                      : 'Saving section…',
+                successAlert: async () => {
+                    await staffSaveSuccessAlert({ isEdit, saveAction: submitAction });
+                },
             },
-            onSuccess: (): void => {
-                visitOutcomeRef.current = 'success';
-                setCompletedTabs((previous) => new Set(previous).add(tab));
-            },
-            onFinish: (): void => {
-                setProcessing(false);
-                const outcome = visitOutcomeRef.current;
-                visitOutcomeRef.current = null;
+            {
+                preserveScroll: true,
+                preserveState: false,
+                onError: (errors: unknown): void => {
+                    if (!isEdit) {
+                        return;
+                    }
 
-                if (outcome === 'success') {
-                    queueAfterPaint(() => {
-                        void staffSaveSuccessAlert({ isEdit, saveAction: submitAction });
-                    });
-                } else if (outcome === 'error') {
-                    queueAfterPaint(() => {
-                        void staffSaveErrorAlert();
-                    });
-                }
+                    const normalizedErrors = normalizePageErrors(errors);
+                    const firstErrorField = Object.keys(normalizedErrors)[0];
+
+                    if (firstErrorField) {
+                        setActiveTab(inferTabForErrorField(firstErrorField));
+                    }
+                },
+                onSuccess: (): void => {
+                    setCompletedTabs((previous) => new Set(previous).add(tab));
+                },
             },
-        };
+        );
 
         if (formMethod === 'put') {
             router.put(formAction, payload, visitOptions);
@@ -421,17 +412,7 @@ export function StaffForm({
             noValidate
             className={cn(formPageSurfaceClassName, 'space-y-6')}
         >
-            <BlockingLoadingOverlay
-                open={processing}
-                title={
-                    !isEdit
-                        ? 'Creating staff record…'
-                        : submitAction === 'save'
-                          ? 'Saving staff record…'
-                          : 'Saving section…'
-                }
-                description="Please keep this tab open until the process finishes."
-            />
+            <CrudBlockingOverlay message={blockingMessage} />
             <StaffFormTabs
                 activeTab={visibleTab}
                 isEdit={isEdit}
@@ -529,7 +510,7 @@ export function StaffForm({
             <InputError message={mergedErrors.enable_login} />
 
             <StickyStaffActionBar
-                processing={processing}
+                processing={isSubmitting}
                 activeSubmitAction={submitAction}
                 backHref={usersRoutes.index.url()}
                 onSaveClick={() => setSubmitAction('save')}

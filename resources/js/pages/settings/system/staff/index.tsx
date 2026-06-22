@@ -1,10 +1,9 @@
 import { Link, router } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
 import type { NationalityOption } from '@/components/address-fields';
-import { BlockingLoadingOverlay } from '@/components/blocking-loading-overlay';
-import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import { CrudBlockingOverlay } from '@/components/crud-blocking-overlay';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,8 +14,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useCrudSubmit } from '@/hooks/use-crud-submit';
+import { confirmCrudDelete } from '@/hooks/use-delete-confirmation';
 import SystemLayout from '@/layouts/settings/system-layout';
-import { queueAfterPaint } from '@/lib/queue-after-paint';
 import { StaffDirectoryTable } from '@/modules/staff/components/staff-directory-table';
 import { StaffForm } from '@/modules/staff/components/staff-form';
 import { StaffToolbar } from '@/modules/staff/components/staff-toolbar';
@@ -85,20 +85,14 @@ export default function StaffIndex({
     const formatRoleName = (roleName: string) =>
         roleName ? roleName.charAt(0).toUpperCase() + roleName.slice(1) : roleName;
 
+    const { blockingMessage, withCrudFeedback, isBlocking } = useCrudSubmit();
+
     const [search, setSearch] = useState(mergedFilters.search);
     const [draftFilters, setDraftFilters] = useState<StaffFilters>(mergedFilters);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-    const [updatingStaffId, setUpdatingStaffId] = useState<number | null>(null);
     const [selectedStatusMember, setSelectedStatusMember] = useState<StaffMember | null>(null);
-    const [selectedDeleteMember, setSelectedDeleteMember] = useState<StaffMember | null>(null);
-    const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null);
     const [bulkRolesOpen, setBulkRolesOpen] = useState(false);
     const [bulkRoleIds, setBulkRoleIds] = useState<Set<number>>(new Set());
-    const [blockUiMessage, setBlockUiMessage] = useState<string | null>(null);
-    const deleteVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
-    const toggleVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
-    const bulkStatusVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
-    const bulkRolesVisitOutcomeRef = useRef<'success' | 'error' | null>(null);
 
     useEffect(() => {
         setSearch(mergedFilters.search);
@@ -185,54 +179,45 @@ export default function StaffIndex({
     };
 
     const confirmBulkStatus = (isEnabled: boolean) => {
-        bulkStatusVisitOutcomeRef.current = null;
-        setBlockUiMessage(
-            isEnabled ? 'Activating sign-in for selected staff…' : 'Disabling sign-in for selected staff…',
-        );
         router.post(
             bulkStatus.url(),
             {
                 staff_ids: [...selectedIds],
                 is_enabled: isEnabled,
             },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    bulkStatusVisitOutcomeRef.current = 'success';
-                    setSelectedIds(new Set());
+            withCrudFeedback(
+                {
+                    loadingMessage: isEnabled
+                        ? 'Activating sign-in for selected staff…'
+                        : 'Disabling sign-in for selected staff…',
+                    successAlert: async () => {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Update complete',
+                            text: 'Selected staff accounts were updated.',
+                            confirmButtonText: 'OK',
+                        });
+                    },
+                    serverErrorAlert: async () => {
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Update failed',
+                            text: 'The bulk status change could not be completed. Please try again.',
+                            confirmButtonText: 'OK',
+                        });
+                    },
                 },
-                onError: () => {
-                    bulkStatusVisitOutcomeRef.current = 'error';
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setSelectedIds(new Set());
+                    },
                 },
-                onFinish: () => {
-                    setBlockUiMessage(null);
-                    const outcome = bulkStatusVisitOutcomeRef.current;
-                    bulkStatusVisitOutcomeRef.current = null;
-                    queueAfterPaint(() => {
-                        if (outcome === 'success') {
-                            void Swal.fire({
-                                icon: 'success',
-                                title: 'Update complete',
-                                text: 'Selected staff accounts were updated.',
-                                confirmButtonText: 'OK',
-                            });
-                        } else if (outcome === 'error') {
-                            void Swal.fire({
-                                icon: 'error',
-                                title: 'Update failed',
-                                text: 'The bulk status change could not be completed. Please try again.',
-                                confirmButtonText: 'OK',
-                            });
-                        }
-                    });
-                },
-            },
+            ),
         );
     };
 
     const confirmBulkRoles = () => {
-        bulkRolesVisitOutcomeRef.current = null;
-        setBlockUiMessage('Applying roles to selected staff…');
         router.post(
             bulkRoles.url(),
             {
@@ -240,45 +225,40 @@ export default function StaffIndex({
                 role_ids: [...bulkRoleIds],
                 replace_existing: true,
             },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    bulkRolesVisitOutcomeRef.current = 'success';
-                    setBulkRolesOpen(false);
-                    setBulkRoleIds(new Set());
-                    setSelectedIds(new Set());
+            withCrudFeedback(
+                {
+                    loadingMessage: 'Applying roles to selected staff…',
+                    successAlert: async () => {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Roles applied',
+                            text: 'Roles were saved for the selected staff with login accounts.',
+                            confirmButtonText: 'OK',
+                        });
+                    },
+                    serverErrorAlert: async () => {
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Could not apply roles',
+                            text: 'The bulk role change could not be completed. Please try again.',
+                            confirmButtonText: 'OK',
+                        });
+                    },
                 },
-                onError: () => {
-                    bulkRolesVisitOutcomeRef.current = 'error';
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setBulkRolesOpen(false);
+                        setBulkRoleIds(new Set());
+                        setSelectedIds(new Set());
+                    },
                 },
-                onFinish: () => {
-                    setBlockUiMessage(null);
-                    const outcome = bulkRolesVisitOutcomeRef.current;
-                    bulkRolesVisitOutcomeRef.current = null;
-                    queueAfterPaint(() => {
-                        if (outcome === 'success') {
-                            void Swal.fire({
-                                icon: 'success',
-                                title: 'Roles applied',
-                                text: 'Roles were saved for the selected staff with login accounts.',
-                                confirmButtonText: 'OK',
-                            });
-                        } else if (outcome === 'error') {
-                            void Swal.fire({
-                                icon: 'error',
-                                title: 'Could not apply roles',
-                                text: 'The bulk role change could not be completed. Please try again.',
-                                confirmButtonText: 'OK',
-                            });
-                        }
-                    });
-                },
-            },
+            ),
         );
     };
 
     const openStatusDialog = (member: StaffMember) => {
-        if (!member.enable_login || !canUpdateUser || updatingStaffId !== null) {
+        if (!member.enable_login || !canUpdateUser || isBlocking) {
             return;
         }
 
@@ -286,116 +266,95 @@ export default function StaffIndex({
     };
 
     const toggleAccountEnabled = () => {
-        if (!selectedStatusMember || !selectedStatusMember.enable_login || !canUpdateUser || updatingStaffId !== null) {
+        if (!selectedStatusMember || !selectedStatusMember.enable_login || !canUpdateUser || isBlocking) {
             return;
         }
-
-        setUpdatingStaffId(selectedStatusMember.id);
-        toggleVisitOutcomeRef.current = null;
-        setBlockUiMessage('Updating account access…');
 
         router.patch(
             usersRoutes.toggleStatus.url(selectedStatusMember.id),
             { is_enabled: !selectedStatusMember.is_enabled },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    toggleVisitOutcomeRef.current = 'success';
-                    setSelectedStatusMember(null);
+            withCrudFeedback(
+                {
+                    loadingMessage: 'Updating account access…',
+                    successAlert: async () => {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Account access updated',
+                            text: 'Sign-in status was saved successfully.',
+                            confirmButtonText: 'OK',
+                        });
+                    },
+                    serverErrorAlert: async () => {
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Update failed',
+                            text: 'Account access could not be updated. Please try again.',
+                            confirmButtonText: 'OK',
+                        });
+                    },
                 },
-                onError: () => {
-                    toggleVisitOutcomeRef.current = 'error';
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        setSelectedStatusMember(null);
+                    },
                 },
-                onFinish: () => {
-                    setUpdatingStaffId(null);
-                    setBlockUiMessage(null);
-                    const outcome = toggleVisitOutcomeRef.current;
-                    toggleVisitOutcomeRef.current = null;
-                    queueAfterPaint(() => {
-                        if (outcome === 'success') {
-                            void Swal.fire({
-                                icon: 'success',
-                                title: 'Account access updated',
-                                text: 'Sign-in status was saved successfully.',
-                                confirmButtonText: 'OK',
-                            });
-                        } else if (outcome === 'error') {
-                            void Swal.fire({
-                                icon: 'error',
-                                title: 'Update failed',
-                                text: 'Account access could not be updated. Please try again.',
-                                confirmButtonText: 'OK',
-                            });
-                        }
-                    });
-                },
-            },
+            ),
         );
     };
 
-    const openDeleteDialog = (member: StaffMember) => {
-        if (!canDeleteUser || deletingStaffId !== null) {
+    const requestDeleteStaff = async (member: StaffMember) => {
+        if (!canDeleteUser || isBlocking) {
             return;
         }
 
-        setSelectedDeleteMember(member);
-    };
+        const confirmed = await confirmCrudDelete({
+            title: 'Delete staff record',
+            text: `Are you sure you want to delete ${member.full_name}? Linked login accounts will be removed. This action cannot be undone.`,
+            confirmButtonText: 'Delete staff',
+        });
 
-    const confirmDeleteStaff = () => {
-        if (!selectedDeleteMember || !canDeleteUser || deletingStaffId !== null) {
+        if (!confirmed) {
             return;
         }
 
-        setDeletingStaffId(selectedDeleteMember.id);
-        deleteVisitOutcomeRef.current = null;
-        setBlockUiMessage('Deleting staff record…');
-
-        router.delete(usersRoutes.destroy.url(selectedDeleteMember.id), {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                deleteVisitOutcomeRef.current = 'success';
-                setSelectedDeleteMember(null);
-            },
-            onError: () => {
-                deleteVisitOutcomeRef.current = 'error';
-            },
-            onFinish: () => {
-                setDeletingStaffId(null);
-                setBlockUiMessage(null);
-                const outcome = deleteVisitOutcomeRef.current;
-                deleteVisitOutcomeRef.current = null;
-                queueAfterPaint(() => {
-                    if (outcome === 'success') {
-                        void Swal.fire({
+        router.delete(
+            usersRoutes.destroy.url(member.id),
+            withCrudFeedback(
+                {
+                    loadingMessage: 'Deleting staff record…',
+                    errorContext: 'delete',
+                    successAlert: async () => {
+                        await Swal.fire({
                             icon: 'success',
                             title: 'Staff deleted',
                             text: 'The staff record was removed.',
                             confirmButtonText: 'OK',
                         });
-                    } else if (outcome === 'error') {
-                        void Swal.fire({
+                    },
+                    serverErrorAlert: async () => {
+                        await Swal.fire({
                             icon: 'error',
                             title: 'Delete failed',
                             text: 'The staff record could not be deleted. Please try again.',
                             confirmButtonText: 'OK',
                         });
-                    }
-                });
-            },
-        });
+                    },
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                },
+            ),
+        );
     };
 
     const fo: StaffFilterOptions = filterOptions ?? { departments: [], clinics: [] };
 
     return (
         <SystemLayout pageTitle="System Setting - Staff Management" breadcrumbs={breadcrumbs}>
-            <BlockingLoadingOverlay
-                open={blockUiMessage !== null}
-                title={blockUiMessage ?? 'Please wait…'}
-                description="Please keep this tab open until the process finishes."
-            />
+            <CrudBlockingOverlay message={blockingMessage} />
             <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <div>
@@ -446,10 +405,9 @@ export default function StaffIndex({
                         onSort={onSort}
                         canUpdateUser={canUpdateUser}
                         canDeleteUser={canDeleteUser}
-                        updatingStaffId={updatingStaffId}
-                        deletingStaffId={deletingStaffId}
+                        isCrudBlocking={isBlocking}
                         onOpenStatusDialog={openStatusDialog}
-                        onOpenDeleteDialog={openDeleteDialog}
+                        onOpenDeleteDialog={(member) => void requestDeleteStaff(member)}
                         onPageChange={goToPage}
                         selectedIds={selectedIds}
                         onToggleOne={toggleSelection}
@@ -458,7 +416,7 @@ export default function StaffIndex({
                 )}
             </div>
 
-            <Dialog open={selectedStatusMember !== null} onOpenChange={(open) => !open && updatingStaffId === null && setSelectedStatusMember(null)}>
+            <Dialog open={selectedStatusMember !== null} onOpenChange={(open) => !open && !isBlocking && setSelectedStatusMember(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Update account access</DialogTitle>
@@ -469,11 +427,11 @@ export default function StaffIndex({
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button type="button" variant="outline" disabled={updatingStaffId !== null} onClick={() => setSelectedStatusMember(null)}>
+                        <Button type="button" variant="outline" disabled={isBlocking} onClick={() => setSelectedStatusMember(null)}>
                             Cancel
                         </Button>
-                        <Button type="button" disabled={updatingStaffId !== null} onClick={toggleAccountEnabled}>
-                            {updatingStaffId !== null ? (
+                        <Button type="button" disabled={isBlocking} onClick={toggleAccountEnabled}>
+                            {isBlocking ? (
                                 <span className="inline-flex items-center gap-2">
                                     <Spinner className="size-4" />
                                     Processing...
@@ -485,21 +443,6 @@ export default function StaffIndex({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <ConfirmDeleteDialog
-                open={selectedDeleteMember !== null}
-                title="Delete staff record"
-                description={
-                    selectedDeleteMember
-                        ? `Are you sure you want to delete ${selectedDeleteMember.full_name}? Linked login accounts will be removed. This action cannot be undone.`
-                        : ''
-                }
-                confirmLabel="Delete staff"
-                processing={deletingStaffId !== null}
-                onOpenChange={(open) => !open && deletingStaffId === null && setSelectedDeleteMember(null)}
-                onCancel={() => setSelectedDeleteMember(null)}
-                onConfirm={confirmDeleteStaff}
-            />
 
             <Dialog open={bulkRolesOpen} onOpenChange={setBulkRolesOpen}>
                 <DialogContent className="max-w-lg">
